@@ -1,21 +1,11 @@
 import type { StringTransform } from '../../types.js'
 
-// Some feeds entity-escape the CDATA markers themselves, sending
-// `&lt;![CDATA[ … ]]&gt;` instead of a real CDATA section. After XML decoding the
-// whole value becomes the literal text `<![CDATA[ … ]]>`. Left as-is, the
-// comment/markup-stripping pass erases it (the markers read as a bogus comment),
-// so the article body or summary disappears.
-//
-// The value is only unwrapped when a single block makes it up whole. A bare
-// `<![CDATA[` in the middle of content is a legitimate example (e.g. an XML
-// tutorial) and must survive verbatim.
-//
-// The wrapper regex is anchored at both ends so a non-match bails at the start,
-// without scanning or copying the whole string.
 const cdataStart = '<![CDATA['
 const cdataEnd = ']]>'
+// Only a value that is one whole block unwraps, so a CDATA marker quoted mid-text survives.
 const wrapperRegex = /^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/
 
+// Entity-escaped CDATA markers decode to a literal <![CDATA[ … ]]> that reads as a comment.
 export const unwrapCdataMarkers: StringTransform = () => {
   return (html) => {
     const inner = wrapperRegex.exec(html)?.[1]
@@ -24,8 +14,7 @@ export const unwrapCdataMarkers: StringTransform = () => {
       return html
     }
 
-    // Bail on multiple or nested blocks, where stripping the outer markers would
-    // splice unrelated segments together.
+    // Stripping the outer markers of nested or multiple blocks would splice unrelated segments.
     if (inner.includes(cdataStart) || inner.includes(cdataEnd)) {
       return html
     }

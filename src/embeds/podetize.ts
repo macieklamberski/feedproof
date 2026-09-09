@@ -41,10 +41,7 @@ export const podetizeResolveEmbed = (url: string): EmbedResolverResult | undefin
   return composeEmbed(id, parsed.searchParams.get('epmode') === 'true')
 }
 
-// Podetize's ShowCastR snippet is a loader script carrying the episode in a bare `data`
-// attribute and the player mode in `epmode`, and it mounts the player where it stands. The
-// script is stripped, so the reader gets nothing. The iframe form takes the same two values as
-// query parameters.
+// Podetize's ShowCastR loader script mounts the player where it stands, and a reader strips it.
 export const podetizeScriptEmbedResolver = createMarkupEmbedResolver(
   'script[src*="player.podetize.com/loadShowcasePlayer.js"][data]',
   (element) => {
@@ -52,6 +49,7 @@ export const podetizeScriptEmbedResolver = createMarkupEmbedResolver(
     // carrying the same path satisfies too, so the host is checked on the parsed url.
     const id = attr(element, 'data')
 
+    // The selector matches a substring any host can carry, so the host is checked here.
     if (!parseUrlOnHosts(attr(element, 'src'), podetizeHosts) || !id || !safeIdRegex.test(id)) {
       return
     }
@@ -60,6 +58,7 @@ export const podetizeScriptEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
+// The player.podetize.com iframe, carrying the episode id and mode as query parameters.
 export const podetizeIframeEmbedResolver = createUrlEmbedResolver(
   podetizeHosts,
   podetizeResolveEmbed,

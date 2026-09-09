@@ -11,21 +11,15 @@ const captivateHosts = ['captivate.fm']
 // of what this states beyond the provider tag.
 const playerHeight = 200
 
-// The kind is matched on its shape rather than against a list of the two Captivate publishes
-// today, so a kind added later still reaches the player. Nothing else rests on which kind it is:
-// the height is the same for both and the player host answers an identical 1,566-byte shell for
-// every path it does not serve (probed 2026-09-07), so a wrong guess renders what refusing would
-// have rendered.
+// A shape, not a list of the two kinds published today, so a kind added later still resolves.
+// The player host answers the same empty shell for every path it does not serve.
 const embedKindRegex = /^[a-z]+$/
 
-// A player url is a kind and an id and nothing after them. The episode files sit on the same
-// domain one segment deeper, `podcasts.captivate.fm/media/{uuid}/{file}.mp3`, and the url
-// resolver is offered every enclosure a feed carries, so the segment count is what keeps a
-// playable file from being minted into a dead `player.captivate.fm/media/…` placeholder.
 export const extractCaptivateEmbed = (link: string): { kind: string; id: string } | undefined => {
   const segments = getPathSegments(link)
   const [kind, id] = segments
 
+  // The segment count keeps a `media/{uuid}/{file}.mp3` enclosure out of a dead placeholder.
   if (segments.length !== 2 || !kind || !id || !embedKindRegex.test(kind) || !uuidRegex.test(id)) {
     return
   }
@@ -33,6 +27,7 @@ export const extractCaptivateEmbed = (link: string): { kind: string; id: string 
   return { kind, id }
 }
 
+// Captivate's player iframe, a kind and a uuid, with no oEmbed to size it.
 export const captivateResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const embed = extractCaptivateEmbed(url)
 

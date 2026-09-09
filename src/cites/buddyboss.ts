@@ -2,9 +2,7 @@ import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
-// BuddyBoss unfurls a link pasted into an activity post into a preview it stores in the post
-// body, so it reaches the feed as markup: the page image linked to the page, the bare host as
-// the link name, the title link and an excerpt, all under one `bb-link-preview-container`.
+// BuddyBoss's link preview: unfurled into the activity post body as bare divs the theme styles.
 export const buddybossCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: '.bb-link-preview-container',

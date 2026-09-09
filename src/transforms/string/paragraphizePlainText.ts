@@ -1,22 +1,16 @@
 import type { StringTransform } from '../../types.js'
 import { isEscapedHtmlFragment } from '../../utils/html.js'
 
-// Matches `<tag>`, `<tag …>`, `<tag />` AND `<tag/>` (XHTML self-close without
-// a space before the slash, common in podcast feeds for `<br/>`). The name may carry a
-// namespace prefix or a hyphen: Atom `type="xhtml"` content keeps `<xhtml:div>`, Facebook's
-// pre-SDK snippet writes `<fb:post>`, and AMP and Web Components write `<amp-img>`. Missing
-// those reads real markup as plain text and autop's it into a paragraph per blank line and a
-// `<br />` per newline.
+// Matches <tag>, <tag …>, <tag /> and <tag/>, the name with a namespace prefix or a hyphen.
+// Atom xhtml content keeps <xhtml:div> and AMP writes <amp-img>, which otherwise read as text.
+// Podcast feeds write <br/> with no space before the slash.
 const hasHtmlRegex = /<[a-z][a-z0-9]*(?:[:-][a-z0-9]+)*[\s/>]/i
 const carriageReturnRegex = /\r\n|\r/g
 const paragraphSeparatorRegex = /\n\s*\n/
 const edgeNewlinesRegex = /^\n+|\n+$/g
 const lineBreakRegex = /[ \t]*\n/g
 
-// Plain-text subset of WordPress autop semantics: double newlines split
-// paragraphs, single newlines become <br />. The HTML-aware parts of autop are
-// owned by the DOM transforms (convertBreaksToParagraphs,
-// wrapBareInlineInParagraphs), so anything containing a tag passes through.
+// Plain-text content with no tags, whose newlines and blank lines collapse when rendered as HTML.
 export const paragraphizePlainText: StringTransform = () => {
   return (html) => {
     if (hasHtmlRegex.test(html)) {
@@ -27,17 +21,14 @@ export const paragraphizePlainText: StringTransform = () => {
       return ''
     }
 
-    // Content that is wholly an escaped HTML fragment (a feed generator escaped its HTML
-    // twice) must reach the DOM stage as one text node so decodeDoubleEncodedTags can
-    // rebuild it. Splitting it into paragraphs and line breaks here would leave only the
-    // lines that happen to hold a complete tag pair decodable, and the rest would stay
-    // visible as text.
+    // Paragraphizing an escaped fragment leaves only the lines holding a full tag pair decodable.
+    // A generator that escaped its HTML twice ships the whole body as one escaped fragment.
     if (isEscapedHtmlFragment(html.replaceAll('&lt;', '<').replaceAll('&gt;', '>'))) {
       return html
     }
 
-    // The appended newline matches what autop does: it turns end-of-text whitespace
-    // into its own (dropped) chunk instead of an inline break.
+    // The appended newline is deliberate.
+    // Without it, end-of-text whitespace becomes a trailing <br /> in the last paragraph.
     const chunks = `${html.replace(carriageReturnRegex, '\n')}\n`.split(paragraphSeparatorRegex)
     const paragraphs: Array<string> = []
 

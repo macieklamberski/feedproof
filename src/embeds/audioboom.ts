@@ -6,31 +6,16 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const provider = 'audioboom'
 
-// The post is named by a numeric id which Audioboom's own share code usually writes with the
-// episode slug hanging off it, `/posts/6479208-eddie-jones-england-s-forward-power/embed/v4`.
-// The slug is decoration: both spellings answer 200 with the same 10,733-byte body while an
-// invented id answers 404 (2026-09-06), so the id alone addresses the post.
-//
-// The slug may not carry a dot, which is what keeps the enclosure out: the episode audio is
-// `audioboom.com/posts/{id}-{slug}.mp3` on the same host, identical up to the extension, so a
-// slug read that stopped at the first hyphen would turn every playable file into a placeholder.
+// `[^.]` keeps the enclosure out: `posts/{id}-{slug}.mp3` sits on the same host, and a slug that
+// admitted the dot would turn every playable file into a placeholder.
+// Audioboom's share code writes the slug hanging off the id, and the id alone addresses the post.
 const postIdRegex = /^(\d+)(?:-[^.]*)?$/
 
-// `audioboo.fm` is the pre-rename host and still appears in feeds.
+// `audioboo.fm` is the pre-rename host.
 const audioboomHosts = ['audioboom.com', 'audioboo.fm']
 
-// The player version decides the size, and the url names it: `/embed/v4` is the full player at
-// 300 while the older `/posts/{id}/embed` is the compact bar at 95. Sizing them alike would
-// misreserve one of the two.
-//
-// Measured 2026-09-07 in Chrome against post 6479208, which a browser loads even though curl is
-// refused. Neither player has a height of its own: both fill whatever frame they get, at 320, 640
-// and 1280 wide alike, so the height does not track the width and these two are floors, not
-// rendered heights. `/embed/v4` renders 300 inside a 200- or 250-tall frame and swaps in a
-// too-small notice at 150; `/posts/{id}/embed` now serves a `v5-embed` player that renders 95
-// inside a 60-tall frame and fills anything taller. So 300 and 95 are the smallest box each
-// accepts, and they fire only when the carrier states no size, since `decideSize` takes the
-// carrier's first.
+// `/embed/v4` is the full player at 300, and `/posts/{id}/embed` is the compact bar at 95. Both
+// fill whatever frame they get, so these are the smallest box each accepts.
 const playerHeights = { v4: 300, legacy: 95 }
 
 export const extractAudioboomPost = (
@@ -60,9 +45,7 @@ export const audioboomResolveEmbed = (url: string): EmbedResolverResult | undefi
   return {
     provider,
     id: post.id,
-    // The form is preserved rather than upgraded. Minting v4 for a legacy embed would put a
-    // 300px player inside the 95px the publisher chose, and neither form can be probed:
-    // Audioboom 403s every user agent, so the safe move is to keep what the feed states.
+    // Not upgraded to v4: that would put a 300px player inside the 95px the publisher chose.
     src: post.isCurrent
       ? `https://embeds.audioboom.com/posts/${post.id}/embed/v4`
       : `https://embeds.audioboom.com/posts/${post.id}/embed`,
@@ -70,16 +53,14 @@ export const audioboomResolveEmbed = (url: string): EmbedResolverResult | undefi
   }
 }
 
+// Audioboom's player iframe, the full v4 player or the older compact bar.
 export const audioboomIframeEmbedResolver = createUrlEmbedResolver(
   audioboomHosts,
   audioboomResolveEmbed,
 )
 
-// Audioboo's WordPress plugin ships the player as `<div class="ab-player" data-boourl="{player
-// url}">` and swaps in the iframe from a script the feed does not carry, so nothing but the
-// anchor inside it reaches a reader. The attribute holds the same url the iframe form holds, so
-// it goes through the same reader; the host is checked here because a markup resolver gets no
-// host check from the factory.
+// Audioboo's WordPress plugin: a div holding the player url, hydrated by a script the feed lacks.
+// `data-boourl` holds the same player url the iframe form holds.
 export const audioboomWidgetEmbedResolver = createMarkupEmbedResolver(
   'div.ab-player[data-boourl]',
   (element) => {

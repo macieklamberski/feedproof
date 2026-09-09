@@ -7,23 +7,20 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const provider = 'codesandbox'
 
-// `sse.codesandbox.io` serves a sandbox's running preview and `blog.codesandbox.io` the marketing
-// blog, so only the bare host and its `www.` spelling name something embeddable. `isHostOf` and not
-// `parseUrlOnHosts` for that reason: the latter admits every subdomain.
+// Listed exactly, not by subdomain: sse.codesandbox.io and blog.codesandbox.io name no sandbox.
 const codesandboxHosts = ['codesandbox.io', 'www.codesandbox.io']
 
-// The slug in front of the hash is renamable, so only the hash identifies a sandbox. Letters and
-// digits in both cases, and no length: the hash has run 5, 6, 9 and 10 characters across the
-// corpus, and the Vue template sandbox is three (`/embed/vue` answers its own page, 2026-09-07).
+// No length bound: hashes run 3 to 10 characters, and `/embed/vue` is a real sandbox.
 const idRegex = /^[A-Za-z0-9]+$/
 
 // Words CodeSandbox owns where a slug sits. `github` is the one that bites, being spelled in the
 // hash's own alphabet. `new` opens a starter template with nothing saved behind it.
+// `/embed/github/…` carries no hash and meets a Cloudflare challenge on every server-side
+// request.
 const reservedSlugSegments = new Set(['github', 'github.com', 'fork', 'new'])
 
-// What the share dialog writes and what 86 of 90 corpus iframes carry. A fixed height and not a
-// ratio: an unsized embed measured 150 at both 500 and 1000 pixels wide, the HTML default, because
-// the editor fills whatever box it is handed rather than reporting one.
+// A height, not a ratio: the editor fills any box, and an unsized frame renders 150 tall.
+// The share dialog writes 500.
 const defaultSandboxHeight = 500
 
 type CodesandboxTarget = {
@@ -37,6 +34,7 @@ type CodesandboxTarget = {
   pagePath: string
 }
 
+// The slug in front of the hash is renamable, so only the hash identifies a sandbox.
 const readId = (slug: string): string | undefined => {
   const id = slug.slice(slug.lastIndexOf('-') + 1)
 
@@ -64,10 +62,6 @@ const parseTarget = (value: string | undefined): CodesandboxTarget | undefined =
     slug = second
   }
 
-  // `/embed/github/{owner}/{repo}/…` embeds a repository rather than a sandbox. It carries no hash,
-  // so there is no id to key enrichment on, and CodeSandbox answers a Cloudflare challenge to every
-  // server-side request for that path, so nothing could read it anyway. Left to the generic
-  // fallback, which already renders it with the height the publisher stated.
   if (!slug || reservedSlugSegments.has(slug.toLowerCase())) {
     return
   }
@@ -108,23 +102,14 @@ export const codesandboxResolveEmbed = (
   }
 }
 
+// CodeSandbox's editor iframe, under /embed/, /s/ or the DevBox-era /p/ routes.
 export const codesandboxIframeEmbedResolver = createUrlEmbedResolver(
   ['codesandbox.io'],
   codesandboxResolveEmbed,
 )
 
-// The editor posts its rendered height unasked, as `{ src, context: 'iframe.resize', height }`,
-// so there is nothing to request: a reader that listens gets the box the sandbox actually needs
-// instead of the 500 stated above. Verified in a browser on 2026-09-07, where one sandbox
-// reported 564 and then 664 as it settled.
-//
-// The origin is spelled out rather than left to the frame's own, which is the trap here. The src
-// is the publisher's url whole, and `www.codesandbox.io` is a spelling this resolver accepts; it
-// 301s to the apex, so the frame's `src` would say `www` while every message arrives from
-// `https://codesandbox.io` and a reader matching the two would drop them all.
-//
-// A publisher who wrote no `autoresize=1` gets a constant 500 rather than the content height,
-// which is the height already stated, so the hint is worth having either way.
+// The editor posts its rendered height unasked, as `{ src, context: 'iframe.resize', height }`.
+// Without `autoresize=1` in the query it posts a constant 500.
 export const readCodesandboxHeight = (data: unknown): number | undefined => {
   return isPlainObject(data) && data.context === 'iframe.resize'
     ? readPixels(data.height)
@@ -133,6 +118,7 @@ export const readCodesandboxHeight = (data: unknown): number | undefined => {
 
 export const codesandboxRenderHint: EmbedRenderHint = {
   provider,
+  // Spelled out: a `www.` src 301s to the apex, so every message arrives from here.
   origin: 'https://codesandbox.io',
   readHeight: readCodesandboxHeight,
 }

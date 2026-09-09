@@ -13,27 +13,19 @@ const provider = 'vimeo'
 
 const safeVideoIdRegex = /^\d+$/
 
-// An unlisted video's privacy hash, which the player takes only in the query: the
-// `player.vimeo.com/video/{id}/{hash}` path spelling is a 404. Ten lowercase hex characters, and
-// case-sensitive, so it travels exactly as written. The query's `h` arrives decoded and is written
-// into the page url's path and the id, so it is held to this shape too: a `/` or a dot segment
-// there would let the feed choose the page.
+// An unlisted video's privacy hash is ten lowercase hex characters, and case-sensitive.
 const unlistedHashRegex = /^[0-9a-f]{10}$/
 
 const vimeoHosts = ['vimeo.com']
 
-// Paths whose leading numeric id is not a video: a showcase and an album are playlists, a channel
-// and a group are listings, an event is a livestream and an on-demand page is a store front, and
-// each lives in its own id space, so that id would mint a player for an unrelated video. Channel
-// 927 and video 927 are both live and belong to different people. A collection can still name a
-// real video deeper in its path, which is what readCollectionVideoId reads.
+// A showcase and an album are playlists, a channel and a group are listings, an event is a
+// livestream and an on-demand page is a store front, and each lives in its own id space: channel
+// 927 and video 927 are both live and belong to different people.
 const collectionPaths = new Set(['showcase', 'album', 'channels', 'groups', 'event', 'ondemand'])
 
-// Vimeo's own pages sit where a video id does, and some of them carry a numeric id of their own:
-// `/users/{userId}` and `/manage/folders/{folderId}` both read as a video today, and user 152184
-// is also video 152184, which belongs to somebody else. The rest carry no numeric segment and are
-// named here anyway, so that refusing them does not rest on their last segment happening to be
-// non-numeric.
+// Vimeo's own pages sit where a video id does, and some carry a numeric id of their own:
+// `/users/{userId}` and `/manage/folders/{folderId}` both read as a video, and user 152184 is
+// also video 152184, which belongs to somebody else.
 const sitePathSegments = new Set([
   'about',
   'blog',
@@ -55,11 +47,8 @@ const sitePathSegments = new Set([
   'watch',
 ])
 
-// An album spells it `/album/{albumId}/video/{videoId}` and a showcase the same way, a group
-// spells it `/groups/{group}/videos/{videoId}`, while an on-demand page and a channel put the
-// video straight after their own segment. An event names its videos under `/videos/`, but its
-// bare and `/embed` forms are the common ones and both would read as a video here, so the event
-// player keeps going to the generic placeholder.
+// An event names its videos under `/videos/`, but its bare and `/embed` forms are the common ones
+// and both would read as a video here.
 const readCollectionVideoId = (segments: Array<string>): string | undefined => {
   if (segments[0] === 'showcase' || segments[0] === 'album') {
     return segments[2] === 'video' ? segments[3] : undefined
@@ -74,17 +63,13 @@ const readCollectionVideoId = (segments: Array<string>): string | undefined => {
   }
 }
 
-// A showcase is a playlist with its own player and its own id space, and `album` is what Vimeo
-// called one before renaming them in 2018. The album spelling is normalised away here because
-// `vimeo.com/album/{id}/embed` 301s onto the showcase player. oEmbed settles nothing either way:
-// it answers the two spellings of one id identically, down to the byte, live or dead alike.
+// `album` is what Vimeo called a showcase before renaming them in 2018, and
+// `vimeo.com/album/{id}/embed` 301s onto the showcase player.
 const showcasePaths = new Set(['showcase', 'album'])
 
-// No video id, so no poster, and no size: the showcase player is a grid whose shape is whatever
-// box the publisher gave it, and the carrier already states one. What the resolver adds is the
-// enrichment key, since `vimeo.com/showcase/{id}` resolves through Vimeo's keyless oEmbed to a
-// title, an author and a thumbnail, and a fabricated id answers 404 there (probed 2026-09-06).
-// The id is qualified because a showcase and a video share one numeric grammar.
+// The showcase player is a grid whose shape is whatever box the publisher gave it, and
+// `vimeo.com/showcase/{id}` resolves through Vimeo's keyless oEmbed to a title, an author and a
+// thumbnail.
 const composeShowcaseEmbed = (showcaseId: string): EmbedResolverResult => {
   return {
     provider,
@@ -139,8 +124,7 @@ const readReference = (link: string): VimeoReference | undefined => {
     return id ? { id } : undefined
   }
 
-  // The hash follows the id it unlocks. A ten-digit video id matches the hash shape on its own,
-  // so a segment counts as one only where a video id comes directly before it.
+  // A ten-digit video id matches the hash shape, so only a segment after an id counts as one.
   const hashIndex = segments.findIndex((segment, index) => {
     return (
       index > 0 && unlistedHashRegex.test(segment) && safeVideoIdRegex.test(segments[index - 1])
@@ -194,8 +178,7 @@ export const readVimeoEmbedSrc = (link: string): string | undefined => {
   return videoId ? composeEmbedUrl(videoId) : undefined
 }
 
-// `t` is the start offset, in Vimeo's `{n}s` form. The unlisted hash is carried by the reference
-// rather than picked from the query, because it also arrives as a path segment.
+// `t` is the start offset, in Vimeo's `{n}s` form.
 const vimeoEmbedParams = ['t']
 
 // The `title` a share snippet writes is usually the video's own title, but sometimes a player
@@ -214,25 +197,24 @@ export const vimeoResolveEmbed = (
   const { id: videoId, hash } = reference
   const title = element ? attr(element, 'title') : undefined
   const params = {
+    // The player takes the hash only as h=: the /video/{id}/{hash} path spelling is a 404.
     ...trimObject({ h: hash }, Boolean),
     ...pickQueryParams(parseUrl(url, placeholderBaseUrl)?.search ?? '', vimeoEmbedParams),
   }
 
   return {
     provider,
-    // Vimeo's own identity for an unlisted video joins the two with a colon, and the hash has to
-    // travel with the id: an oEmbed lookup for the bare id answers 404.
+    // The hash travels in the id: an oEmbed lookup for the bare id answers 404.
     id: hash ? `${videoId}:${hash}` : videoId,
     src: composeEmbedUrl(videoId, params),
     // Without the hash the page loses its title and its poster, so it stays on the url too.
     url: `https://vimeo.com/${videoId}${hash ? `/${hash}` : ''}`,
     title,
-    // TODO: no thumbnail yet. Vimeo posters aren't derivable from the id (the URL
-    // carries an opaque hash), so they need an oEmbed lookup
-    // (https://vimeo.com/api/oembed.json?url=...) wired through enrichEmbedFn.
+    // TODO: no thumbnail. Vimeo posters are not derivable from the id and need an oEmbed lookup.
   }
 }
 
+// A Vimeo player iframe, a frame of a video or showcase page, or the Flash moogaloop player.
 export const vimeoEmbedResolver = createUrlEmbedResolver(vimeoHosts, vimeoResolveEmbed)
 
 // `dnt=1` turns off Vimeo's viewer tracking: no cookies and no analytics. `autoplay=1` starts

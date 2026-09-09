@@ -8,17 +8,11 @@ const safeIdRegex = /^\d+$/
 
 const libsynHosts = ['libsyn.com']
 
-// Libsyn spells its player options as path segments, not a query string:
-// `/embed/episode/id/{id}/height/{px}/theme/{name}/thumbnail/{yes|no}/…`.
-//
-// `show` reads like a kind and is not one: given a real show id it renders the same "Episode
-// Does Not Exist" error a nonsense kind does. `destination` is what plays a show's latest
-// episode, and it cannot repair a show carrier: the two are different id spaces naming different
-// podcasts. Show 45546 is The Feed while destination 45546 belongs to show 26465, and show 20000
-// is StarQuest while destination 20000 belongs to show 20290 (api, 2026-08-31). Rewriting the
-// kind would mint another show's player, so a show carrier falls through instead.
+// `show` renders an error and `destination` is another id space, so a show carrier falls through.
 const embedKinds = ['episode', 'destination']
 
+// Libsyn spells its player options as path segments, not a query string:
+// `/embed/episode/id/{id}/height/{px}/theme/{name}/thumbnail/{yes|no}/…`.
 const readPathOption = (segments: Array<string>, name: string): string | undefined => {
   const index = segments.indexOf(name)
 
@@ -30,9 +24,8 @@ export const extractLibsynEmbed = (
 ): { kind: string; id: string; height?: number } | undefined => {
   const parsed = parseUrl(link, placeholderBaseUrl)
 
-  // Libsyn serves the episode audio from the same domain as the players, so a media path that also
-  // spells the player's segments reads as an episode and the enclosure loses its audio element to
-  // a placeholder.
+  // An audio file on the player path would otherwise trade its audio element for a placeholder.
+  // Libsyn serves the episode audio from the same domain as the players.
   if (!parsed || isMediaFile(parsed.pathname)) {
     return
   }
@@ -58,16 +51,6 @@ export const extractLibsynEmbed = (
   }
 }
 
-// Two things make this worth a resolver. The player url carries its own height, so the
-// placeholder can reserve the right space from the markup alone. And the old player host is
-// failing: `html5-player.libsyn.com` answers 500 for older episodes (ids 2233504 and 5508311,
-// checked 2026-08-11) while `play.libsyn.com` serves all of them, so minting the modern host
-// repairs an embed that no longer loads.
-//
-// No thumbnail and no canonical url. There is an `oembed.libsyn.com` endpoint, but it does not
-// answer for what the markup gives us: `?item_id={id}` returns `No valid media found` and
-// `?url={player url}` returns an HTML page, not JSON (both checked 2026-08-11). The
-// episode title lives on the player page and artwork needs an authenticated api call.
 export const libsynResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const embed = extractLibsynEmbed(url)
 
@@ -77,6 +60,9 @@ export const libsynResolveEmbed = (url: string): EmbedResolverResult | undefined
 
   const height = embed.height ? `height/${embed.height}/` : ''
 
+  // No thumbnail and no canonical url: `oembed.libsyn.com` answers `No valid media found` to
+  // `?item_id={id}` and an HTML page to `?url={player url}`, and artwork needs an authenticated
+  // api call.
   return {
     provider: 'libsyn',
     id: `${embed.kind}/${embed.id}`,
@@ -85,4 +71,6 @@ export const libsynResolveEmbed = (url: string): EmbedResolverResult | undefined
   }
 }
 
+// Libsyn's player iframe, whose old html5-player.libsyn.com host answers 500 for older episodes.
+// `play.libsyn.com` serves all of them.
 export const libsynEmbedResolver = createUrlEmbedResolver(libsynHosts, libsynResolveEmbed)

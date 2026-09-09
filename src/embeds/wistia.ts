@@ -16,15 +16,9 @@ const jsonpSuffixRegex = /\.jsonp$/
 
 const wistiaHosts = ['wistia.net', 'wistia.com']
 
-// Each route mapped to the player route it rebuilds onto. A channel and a playlist are separate
-// players, and the media route cannot stand in for either: `/embed/iframe/{id}` given an id it
-// cannot serve answers 200 with a bare `{"error":true,"iframe":true}` body, so the status code
-// says nothing and a channel id fails there exactly as an unknown one does.
-// `channels` is the account host's spelling: `{account}.wistia.com/channels/{id}` is the channel's
-// own page, login-gated even for a public channel, so rebuilding it onto the public player repairs
-// a frame that would otherwise show a login screen. A channel has no vanity slug anywhere in the
-// url space: the segment is the same hashed id every route shares, which is what lets one id
-// grammar stand guard for all of them.
+// Both spellings ship: channel on the player host and channels on the account host.
+// A channel has no vanity slug anywhere in the url space: the segment is the same hashed id every
+// route shares.
 const playerRoutes = toMap({
   iframe: 'iframe',
   medias: 'iframe',
@@ -33,8 +27,8 @@ const playerRoutes = toMap({
   playlists: 'playlists',
 })
 
-// The player url every caller that recovers an id has to build, on the route `playerRoutes`
-// names.
+// The iframe route answers 200 with an error body for a channel id, so the route has to match.
+// The body is a bare `{"error":true,"iframe":true}`, so the status code says nothing.
 export const composeEmbedUrl = (route: string, mediaId: string): string => {
   return `https://fast.wistia.net/embed/${route}/${mediaId}`
 }
@@ -52,8 +46,7 @@ export const extractWistiaEmbed = (
     return
   }
 
-  // The public page is `{account}.wistia.com/medias/{id}`, and only the un-prefixed route reaches
-  // it: the player hosts serve every account and 404 on `/medias/{id}` (checked live 2026-09-07).
+  // Only the account host serves /medias/{id}: the player hosts 404 on it.
   const host = segments[0] === 'medias' ? parseUrlOnHosts(link, wistiaHosts)?.hostname : undefined
 
   return { route, id, page: host ? `https://${host}/medias/${id}` : undefined }
@@ -91,6 +84,7 @@ export const wistiaResolveEmbed = (
   }
 }
 
+// A Wistia media, channel or playlist player iframe, or a frame of the login-gated channel page.
 export const wistiaEmbedResolver = createUrlEmbedResolver(wistiaHosts, wistiaResolveEmbed)
 
 // Starts playback on the click that loads the player: the iframe copies every query entry into

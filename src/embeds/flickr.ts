@@ -6,30 +6,18 @@ import { createUrlEmbedResolver, getEmbedSize } from '../utils/widgets.js'
 
 const flickrHosts = ['flickr.com']
 
-// Three dead carriers, each naming an album, a group pool or a whole photostream. The
-// `<object>`/`<embed>` pair from the Flash era plays the swf, the legacy iframe points at the
-// slideshow page, and the third frames the album or stream page itself, which is what the
-// page's own "view slideshow" link pointed at. Every flickr.com page answers `x-frame-options:
-// SAMEORIGIN`, so both iframes render an empty frame, and none of the three shows anything today.
+// The swf url names only the player, with a `?v=` cache-buster identical on every slideshow.
 const flashPlayerPathRegex = /^\/apps\/slideshow\//i
 const legacyPlayerPathRegex = /^\/slideshow\/index\.gne$/i
 
-// The swf url names only the player, with a cache-busting `?v=` that is identical on every
-// slideshow ever pasted. The subject is in the flashvars, as a percent-encoded page path that
-// `URLSearchParams` decodes: `/photos/{owner}/sets/{setId}/show/` for an album and
-// `/photos/{owner}/show/` for a photostream. A framed page carries the same path as its own.
-//
-// No snippet holds `set_id` without `page_show_url`, so the path is the one key worth reading
-// and the only one that also yields the owner. The photostream form is rare, and a few snippets
-// name the owner only in `user_id`.
 const setPathRegex = /^\/photos\/([\w.@-]+)\/sets\/(\d+)/
 const streamPathRegex = /^\/photos\/([\w.@-]+)\/show\/?$/
 const groupPathRegex = /^\/groups\/(\d+@N\d\d)\/pool\/show\/?$/
 
 const safeSetIdRegex = /^\d+$/
 
-// An owner is a numeric NSID with its `@N0…` suffix, or the path alias the owner chose. The
-// leading class excludes a dots-only segment, so `..` cannot reach a minted path.
+// The first class admits no dot, so `..` never reaches a minted path.
+// An owner is a numeric NSID with its `@N0…` suffix, or the path alias the owner chose.
 const safeOwnerRegex = /^[\w-][\w.-]*(?:@N\d\d)?$/
 
 // A group and a photostream each resolve by NSID and only by NSID: the player answers 200 for
@@ -41,10 +29,8 @@ const safeNsidRegex = /^\d+@N\d\d$/
 // group pool its NSID, a photostream only its owner.
 type FlickrSubject = { setId?: string; owner?: string; groupId?: string }
 
-// Flickr's own embed script builds a frameless iframe and writes one of these endpoints into it,
-// so what it fetches is exactly what an `src` can carry. Both discriminate rather than shelling:
-// a real id answers 200 with the whole slideshow, an invented one answers 404 (2026-08-14). The
-// album form drops the owner, which is what lets a carrier naming only a set still resolve.
+// Flickr's own embed script writes these embedr endpoints into a frameless iframe. A real id
+// answers 200 with the whole slideshow and an invented one 404.
 const composeAlbumPlayer = (setId: string): string => {
   return `https://embedr.flickr.com/photosets/${setId}`
 }
@@ -53,11 +39,8 @@ const composeStreamPlayer = (owner: string): string => {
   return `https://embedr.flickr.com/photostreams/${owner}`
 }
 
-// The page player takes either owner spelling, where embedr takes only the NSID. A real alias
-// answers 200 with the owner's stream (the page carries the account's NSID), an invented one
-// 404s, and no frame-blocking header is served; checked across three aliases and an NSID,
-// 2026-08-31. It also swallows the width and height query embedr takes, so one caller serves
-// both endpoints.
+// The page player takes either owner spelling, serves no frame-blocking header and takes the
+// same width and height query as embedr.
 const composeAliasStreamPlayer = (owner: string): string => {
   return `https://www.flickr.com/photos/${owner}/player`
 }
@@ -66,13 +49,11 @@ const composeGroupPlayer = (groupId: string): string => {
   return `https://embedr.flickr.com/groups/${groupId}`
 }
 
-// Flickr's short urls are the set id in base58, and `flic.kr/s/{code}` goes through the
-// platform's own redirector to the owned album page, so the page is reachable even when the
-// markup never names the owner. Checked live 2026-08-14: a real set lands on
-// `flickr.com/photos/{owner}/sets/{setId}/` and an invented one answers 404. Set ids exceed
-// 2^53, so the arithmetic is BigInt.
+// Flickr's base58 alphabet for flic.kr short urls.
 const base58Alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
 
+// `flic.kr/s/{code}` redirects to the owned album page. Set ids exceed 2^53, so the arithmetic
+// is BigInt.
 const composeShortAlbumUrl = (setId: string): string => {
   let remaining = BigInt(setId)
   let encoded = ''
@@ -85,23 +66,8 @@ const composeShortAlbumUrl = (setId: string): string => {
   return `https://flic.kr/s/${encoded || base58Alphabet[0]}`
 }
 
-// The query is what lays the slideshow out, and the endpoint has no default of its own to fall
-// back on, so a size always travels in the url rather than being left to the reader. Checked
-// 2026-09-08 against a real set, with a fabricated one answering 404 as the control: with no
-// query all 30 of its `<img>` elements come back `width="NaN" height="NaN"` and the container
-// `style="width: NaNpx; height: NaNpx"`, and with one, none of them do. Every spelling answers
-// 200 at the same 119 KB from the same rendition set, so neither the status nor the byte count
-// separates them; the `NaN` count is the only thing that does.
-//
-// This is the size Flickr's own dialog wrote for years, used only when the carrier states no
-// usable box. It is one object rather than two constants because it is one box: the choice below
-// is between two whole sizes, never between four halves. Flickr needs one at all, where 32 other
-// resolvers do not, because it is the only one writing the size into the url instead of onto the
-// placeholder, so `decideSize` never gets the chance to arbitrate.
-//
-// It is an instruction to the endpoint, not a claim about the player: the slideshow renders at
-// whatever box the query names, so there is no rendered height to measure them against, and
-// `preferResolverSize` below keeps the placeholder equal to what the src asks for.
+// The size Flickr's own dialog wrote for years. The slideshow renders at whatever box the query
+// names, so there is no rendered height to measure against.
 const dialogSize = { width: 400, height: 300 }
 
 // What a page path names, whether it arrived in the flashvars or as the framed page itself.
@@ -144,12 +110,6 @@ const readLegacySubject = (parsed: URL): FlickrSubject => {
   }
 }
 
-// One composer for both carriers. The id takes one of four shapes, and the segment before the
-// slash is what tells them apart: `{owner}/{setId}` when the markup names both, which is what
-// the album's key-free oEmbed needs (it answers `flickr_type: album` with a title, an author
-// and a thumbnail, checked 2026-08-14); `photosets/{setId}` when the owner is absent, which
-// still addresses the player but not oEmbed; `groups/{nsid}` for a group pool; and
-// `photostreams/{owner}` for a stream.
 const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined => {
   const owner = keepIfMatches(subject.owner, safeOwnerRegex)
   // Only the path alias is a name. The NSID spelling of the same owner names nobody a reader
@@ -162,6 +122,7 @@ const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined =
     return owner
       ? {
           provider: 'flickr',
+          // The album's key-free oEmbed needs `{owner}/{setId}`: a title, an author, a thumbnail.
           id: `${owner}/${subject.setId}`,
           src: composeAlbumPlayer(subject.setId),
           url: `https://www.flickr.com/photos/${owner}/sets/${subject.setId}`,
@@ -169,6 +130,7 @@ const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined =
         }
       : {
           provider: 'flickr',
+          // Addresses the player but not oEmbed.
           id: `photosets/${subject.setId}`,
           src: composeAlbumPlayer(subject.setId),
           url: composeShortAlbumUrl(subject.setId),
@@ -190,6 +152,7 @@ const composeEmbed = (subject: FlickrSubject): EmbedResolverResult | undefined =
     return {
       provider: 'flickr',
       id: `photostreams/${owner}`,
+      // embedr 404s on an alias, so only an NSID goes there.
       src: safeNsidRegex.test(owner) ? composeStreamPlayer(owner) : composeAliasStreamPlayer(owner),
       url: `https://www.flickr.com/photos/${owner}/`,
       author,
@@ -223,21 +186,19 @@ export const flickrResolveEmbed = (
     return
   }
 
-  // The query needs two pixel numbers, so the carrier's size is taken whole or not at all: a
-  // stated half beside a default is a box nobody laid out, and the endpoint honours each half
-  // literally, so it would render it. `getEmbedSize` is what decides what the carrier stated,
-  // which is why a zero and a shape too small to be a box both arrive here as nothing.
   const declared = getEmbedSize(element, 0)
+  // Both halves or neither: given one half, the endpoint uses its default for the other as is.
   const { width, height } =
     declared.width && declared.height
       ? { width: declared.width, height: declared.height }
       : dialogSize
 
+  // The size always travels in the src: with no query every image renders at NaN.
   return { ...result, src: `${result.src}?width=${width}&height=${height}`, width, height }
 }
 
-// All three carriers render nothing today, and each names something Flickr's current embed
-// endpoint still serves, so each maps onto a working slideshow.
+// Flickr's slideshow swf, legacy iframe or framed album page, none of which renders today.
+// Every flickr.com page answers `x-frame-options: SAMEORIGIN`, so both iframes render empty.
 export const flickrEmbedResolver = createUrlEmbedResolver(flickrHosts, flickrResolveEmbed, {
   // The carrier's size is already folded into the src, and it is what the endpoint renders at.
   preferResolverSize: true,

@@ -6,34 +6,27 @@ import { atUsername, createMarkupEmbedResolver, createUrlEmbedResolver } from '.
 
 const provider = 'telegram'
 
-// A channel and a message id, the pair the widget spells `channel/111424`. Telegram's signup
-// form asks for five characters, but shorter names exist: Telegram holds some itself and
-// Fragment auctions the rest, and `t.me/nft/3?embed=1` serves a real post (checked 2026-09-07).
-// Three is the floor because every reserved route that takes a numeric second segment is
-// shorter than that, the private channel's own `c/{id}` included. A message id is a plain
-// counter. A forum channel writes a third segment for the topic, and that shape is left alone:
-// no real specimen was available to check the url against.
+// A channel name and a message id, the pair the widget spells channel/111424. Three characters
+// is the floor: t.me/nft/3 serves a real post (checked 2026-09-07), and every reserved route
+// that takes a numeric second segment is shorter.
 const postRegex = /^([a-zA-Z][a-zA-Z0-9_]{2,})\/(\d+)$/
 
 // The third apex Telegram has always answered on, serving the identical widget: probed live, a
 // real post answers 200 there.
 const telegramHosts = ['t.me', 'telegram.me', 'telegram.dog']
 
-// `?embed=1` is what makes t.me answer with the post itself. The same path without it serves the
-// "open in Telegram" page that wraps the post in action buttons (checked 2026-08-14), so the
-// parameter repairs a bare link as much as it normalizes the two carriers onto one url. A
-// fabricated message id answers with a "Post not found" bubble, which is how the mint was
-// verified against a real one.
 const composePost = (channel: string, messageId: string): EmbedResolverResult => {
   return {
     provider,
     id: `${channel}/${messageId}`,
+    // Without embed=1 t.me serves the open-in-Telegram wrapper page instead of the post.
     src: `https://t.me/${channel}/${messageId}?embed=1`,
     url: `https://t.me/${channel}/${messageId}`,
     author: atUsername(channel),
   }
 }
 
+// A forum channel writes a third segment for the topic, and that shape is not read.
 const readPost = (value: string | undefined): EmbedResolverResult | undefined => {
   const match = postRegex.exec(value ?? '')
 
@@ -44,10 +37,8 @@ const readPost = (value: string | undefined): EmbedResolverResult | undefined =>
   return composePost(match[1], match[2])
 }
 
-// Telegram ships a post as a bare `<script async src="https://telegram.org/js/telegram-widget.js"
-// data-telegram-post="channel/111424">` that builds the player iframe at runtime. The script is
-// stripped and the post goes with it, so the pipeline returns only the paragraphs around it:
-// feeds carrying the script almost never hold a t.me iframe anywhere.
+// Telegram ships a post as a bare <script data-telegram-post> whose widget.js builds the iframe.
+// Feeds carrying the script almost never hold a t.me iframe anywhere.
 export const telegramScriptEmbedResolver = createMarkupEmbedResolver(
   'script[data-telegram-post]',
   (element) => {
@@ -66,6 +57,7 @@ export const telegramScriptEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
+// The post iframe that script builds, saved into the feed by a CMS that ran it first.
 export const telegramResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   return readPost(getPathSegments(url).join('/'))
 }

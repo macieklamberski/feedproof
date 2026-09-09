@@ -14,10 +14,7 @@ const spreakerHosts = ['spreaker.com']
 // An episode player, or a show player that plays the latest episode.
 const embedKinds = { episode_id: 'episode', show_id: 'show' } as const
 
-// The height Spreaker documents in its own embed snippet (`height="200px"`), and the reason
-// this resolver earns its place: real iframes carry no height attribute at all, so without it
-// a reader reserves nothing. Spreaker's oEmbed also returns title, author and a
-// thumbnail, which the enrichment hook can fill once provider and id are tagged here.
+// The height Spreaker documents in its own embed snippet, `height="200px"`.
 const playerHeight = 200
 
 export const extractSpreakerEmbed = (
@@ -40,9 +37,8 @@ export const extractSpreakerEmbed = (
   }
 }
 
-// An iframe carrier titles itself with the episode's name rather than the player's: across 46
-// titled frames in a 1/16 corpus sample the commonest value covered 4% of them. The anchor
-// carrier below passes no element and states its name in `data-title` instead.
+// Spreaker's player iframe ships no height attribute, so a reader reserves nothing for it.
+// Spreaker's oEmbed returns the title, the author and a thumbnail for the id tagged here.
 export const spreakerResolveEmbed = (
   url: string,
   element?: Element,
@@ -72,33 +68,16 @@ export const spreakerIframeEmbedResolver = createUrlEmbedResolver(
   spreakerResolveEmbed,
 )
 
-// Spreaker's other embed code is an `<a class="spreaker-player">` beside a `widgets.js` loader
-// that swaps the anchor for the player at runtime. Feeds that carry the loader mostly hold no
-// player iframe anywhere, so what a reader sees is the anchor's fallback text ("Listen to ...
-// on Spreaker") and no player at all.
-//
-// The resource is spelled as a query fragment, not a url, `data-resource="episode_id=42"`,
-// so it is read by pasting it onto the player url the iframe form already uses. Where the anchor
-// states its own `data-height` that wins over the constant, since the publisher sized this one.
-// `data-resource` is required, not merely read. The class alone is styling anyone can copy, and
-// the anchor already renders as a working link, so resolving one without the attribute would
-// turn an ordinary link into a player on thin evidence. It would also buy nothing: the feeds
-// that carry the class without the attribute do not ship the loader script that would have
-// made a player of it.
-//
-// The anchor's own href is not the click target, because it can name the show while the
-// resource names an episode, and the id already mints the exact page.
-//
-// Only `data-title` is read for the name. The anchor's text states it too, inside a localized
-// call to action, `Listen to "X" on Spreaker.` beside `Escucha"X" en Spreaker.`, and reading it
-// back out means matching quote characters per language against a sample of eight anchors. A
-// pair nobody sampled, the CJK brackets among them, would drop the title silently, and any two
-// quote characters in the sentence would bind a wrong one, which is worse than none in a field
-// a reader draws. The name is not lost either way: Spreaker's oEmbed returns it, and the
-// enrichment hook can fill it now that provider and a precise id are tagged here.
+// Spreaker's anchor snippet, which only a widgets.js loader swaps for the player at runtime.
+// Feeds carrying the loader mostly hold no player iframe anywhere, so a reader sees the anchor's
+// fallback text, "Listen to ... on Spreaker", and no player at all.
 export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
+  // Without data-resource the anchor is an ordinary link: the class is styling anyone can copy.
+  // The feeds that carry the class without the attribute do not ship the loader script either.
   'a.spreaker-player[data-resource]',
   (element) => {
+    // The resource is spelled as a query fragment, `data-resource="episode_id=42"`. The anchor's
+    // own href can name the show while the resource names an episode.
     const resource = attr(element, 'data-resource')
     const result = resource
       ? spreakerResolveEmbed(`https://widget.spreaker.com/player?${resource}`)
@@ -110,6 +89,8 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 
     // The anchor states its own size, e.g. `data-height="200px"`.
     const stated = parsePixelSize(attr(element, 'data-height'))
+    // The anchor text is a localized call to action around the title, not the title itself, and
+    // the quote characters wrapping the title differ per language.
     const title = attr(element, 'data-title')
 
     return {
@@ -119,8 +100,7 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The widget guide documents `autoplay=true`, but the player bundle holds no code for it and the
-// server-rendered config is identical with and without it. The widget speaks player.js instead.
+// The documented autoplay=true does nothing: the player bundle holds no code for it.
 export const spreakerRenderHint: EmbedRenderHint = {
   provider,
   isReady: isPlayerJsReady,

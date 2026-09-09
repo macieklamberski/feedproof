@@ -9,13 +9,9 @@ const provider = 'imgur'
 
 const imgurHosts = ['imgur.com']
 
-// `i.imgur.com` is the media CDN and `s.imgur.com` the embed script, so neither names a post, and
-// `i.stack.imgur.com` is not Imgur's content at all. Only the bare host, its `www.` spelling and
-// the mobile one do, which is why the url is checked with `isHostOf` alone and not through
-// `parseUrlOnHosts`: that one admits every subdomain, and the CDN came through with it. An
-// enclosure names its kind in its MIME type and not in its path, so `i.imgur.com/{id}` typed
-// `video/mp4` arrives with no extension for `videoFileRegex` to read, and the host is the only
-// thing standing between a playable file and a placeholder in its place.
+// Exact hosts on purpose: `i.imgur.com` is the CDN and names no post, and a `video/mp4` enclosure
+// there carries no extension, so the host is all that keeps it a playable file.
+// `s.imgur.com` is the embed script, and `i.stack.imgur.com` is not Imgur's content at all.
 const imgurPageHosts = ['imgur.com', 'www.imgur.com', 'm.imgur.com']
 
 // The routes that name an album: the prefix the platform's own script writes, and the gallery
@@ -27,16 +23,9 @@ const albumRoutes = new Set(['a', 'gallery'])
 // front of a post one segment deeper. `imgur.com/t/{tag}` alone names no post.
 const tagRoute = 't'
 
-// Imgur's own pages sit at the same depth as a post, so a first segment is a site page as often
-// as it is an id. The longer ones are live pages that pass the id shape, which is why the shape
-// alone let `imgur.com/upload` mint a post called `upload`. The short ones, `r` and `user`, are
-// refused by the id length today and are named here anyway, so that dropping the length band
-// cannot quietly turn a subreddit or a profile into a post.
-// No route word can pin the id's position instead: the post page is `imgur.com/{id}` with the id
-// as the whole path. So each word is here because the platform answered for it, not because it
-// reads like one. `memes`, `tools` and `viral` all read like site pages and are posts a person
-// uploaded, which is why they are absent; `topics` serves the same not-found shell as an id
-// nobody has taken.
+// `r` and `user` fail the id length today and stay so dropping the band cannot make them posts.
+// Imgur's own pages sit at the same depth as a post. `memes`, `tools` and `viral` are posts a
+// person uploaded, and `topics` serves the not-found shell an untaken id does.
 const sitePathSegments = new Set([
   'about',
   'account',
@@ -60,10 +49,7 @@ const sitePathSegments = new Set([
   'vidgif',
 ])
 
-// The gallery's own listings sit where an album id would, so they are refused the same way.
-// All four served the ~138 kB listing shell on 2026-09-08, against 9.9 kB for a real post and
-// 6.7 kB for an id nobody has taken. `trending` is the one that also passes the id shape, so
-// without it `imgur.com/gallery/trending` minted a post called `a/trending`.
+// The gallery's own listings, sitting where an album id would. `trending` also passes the id shape.
 const galleryListingSegments = new Set(['hot', 'new', 'top', 'trending'])
 
 // Post ids are short alphanumerics. The album form is the same id behind an `a/` prefix, which
@@ -71,11 +57,8 @@ const galleryListingSegments = new Set(['hot', 'new', 'top', 'trending'])
 const safePostIdRegex = /^[a-zA-Z0-9]{5,12}$/
 const albumPrefix = 'a/'
 
-// A share link puts a title slug in front of the id, `gallery/{slug}-{id}`. The id was the last
-// hyphen-separated word in all 600 posts the platform's own listing API named on 2026-09-08, and
-// the slug alone addresses nothing: `gallery/pikachu-face` redirects to the home page while
-// `gallery/pikachu-face-BnabGVX` and `gallery/BnabGVX` served the same bytes. The hyphen is what
-// pins the id, not the band: without it a longer word reads as its own last twelve characters.
+// The hyphen pins the id: without it a longer word reads as its own last twelve characters.
+// A share link is `gallery/{slug}-{id}`, and the slug alone redirects to the home page.
 const sluggedPostIdRegex = /(?:^|-)([a-zA-Z0-9]{5,12})$/
 
 type ImgurPost = {
@@ -125,10 +108,7 @@ const composeAlbumEmbed = (segment: string | undefined): EmbedResolverResult | u
   return id ? composeEmbed({ id, isAlbum: true }) : undefined
 }
 
-// Imgur's embed is a blockquote plus `s.imgur.com/min/embed.js`, and the script is what turns it
-// into the player. Without the script a reader gets the quote and its link, so the picture never
-// appears. The blockquote is the only shape the platform has issued since the feature shipped in
-// 2015. A bare `i.imgur.com/<id>.jpg` hotlink is an ordinary image and not this.
+// Imgur ships a post as a blockquote only its embed script turns into the player.
 export const imgurBlockquoteEmbedResolver = createMarkupEmbedResolver(
   'blockquote.imgur-embed-pub[data-id]',
   (element) => {
@@ -145,9 +125,8 @@ export const imgurBlockquoteEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The frame the script builds, kept by exports that stored the page after it rendered. Its query
-// describes the embedding page (`pub`, `ref`, `context`, `analytics`, `w`), so the url is rebuilt
-// from the path instead of carried across.
+// The frame the embed script builds, kept by exports that stored the page after it rendered.
+// Its query (`pub`, `ref`, `context`, `analytics`, `w`) describes the embedding page.
 export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrl(url, placeholderBaseUrl)
 
@@ -179,14 +158,8 @@ export const imgurResolveEmbed = (url: string): EmbedResolverResult | undefined 
 export const imgurIframeEmbedResolver = createUrlEmbedResolver(imgurHosts, imgurResolveEmbed)
 
 // The embed posts its rendered height on load, unasked, as a JSON string carrying
-// `message: 'resize_imgur'`. It has to be parsed before it can be read. Verified in a browser on
-// 2026-09-07 at 640 wide, where one post reported 595 and another 1389, which is why the resolver
-// states no height at all: there is no one box that fits both.
-//
-// Two things the message does not cover. An album is served by an older template that posts
-// nothing (11 seconds, no message). And the height is the one the post needs at the width it
-// loaded at, 415 at 400 wide against 595 at 640, sent once and never again, so a box that changes
-// width afterwards keeps the first number.
+// `message: 'resize_imgur'`. An album is served by an older template that posts nothing, and the
+// height is sent once, for the width the post loaded at, and never again.
 export const readImgurHeight = (data: unknown): number | undefined => {
   if (typeof data !== 'string') {
     return

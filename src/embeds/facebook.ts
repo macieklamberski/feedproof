@@ -4,26 +4,13 @@ import { attr, find, parsePixelSize, text } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// Facebook's embed SDK ships a post as `<div class="fb-post" data-href="{post url}">` and a
-// video as `<div class="fb-video" data-href="{video url}">` next to a script that builds the
-// widget at runtime. A reader runs no JS, so both divs render nothing and the post vanishes
-// with no fallback link to keep. The keyless plugin endpoints take the href as-is (verified
-// live 2026-08-08, 200 on real posts and videos):
-//   https://www.facebook.com/plugins/post.php?href={encoded href}
-//   https://www.facebook.com/plugins/video.php?href={encoded href}
-// `fb.watch` is the short-link host the mobile app hands out, and it turns up inside both
-// widget divs, so it is treated as a Facebook url even though the plugin lives elsewhere.
-// Posts live on the apex and on `web.`/`m.`/`business.` alike, so every check goes through
-// `parseUrlOnHosts`, which admits the subdomains and supplies the base a url with no scheme
-// needs to name its host at all. Only a url passing it may reach the plugin template.
+// `fb.watch` is the short-link host the mobile app hands out, found inside both widget divs.
+// Posts live on the apex and on `web.`, `m.` and `business.` alike.
 const facebookHosts = ['facebook.com', 'fb.watch']
 
-// The copy-paste embed dialog ships the post text, the page and the date inside a fallback
-// `<blockquote cite>` that renders when the SDK never loads. Replacing the widget without
-// lifting those out would drop the only readable copy of the post.
-//
-// The shape is fixed: a caption paragraph, then "Posted by {page} on {date}" as two anchors.
-// Anything else is not the dialog's output, so only the paragraph is taken.
+// The embed dialog ships the post text, the page and the date in a fallback `<blockquote cite>`
+// that renders when the SDK never loads. The shape is fixed: a caption paragraph, then
+// "Posted by {page} on {date}" as two anchors.
 const readFallback = (blockquote: Nullish<Element>): Partial<EmbedResolverResult> => {
   if (!blockquote) {
     return {}
@@ -49,10 +36,8 @@ const composePluginEmbed = (
   href: string,
   extra: Partial<EmbedResolverResult>,
 ): EmbedResolverResult => {
-  // Here is the only place that can absolutise the href. `resolveUrlFn` gives a scheme to `src`,
-  // `url`, `poster`, `thumbnail` and `avatar`, but never descends into a query, and the id is not
-  // a url it touches at all. `EnrichEmbedFn` gets `{provider, id}` and nothing else, so a
-  // scheme-less id addresses nothing and has to read alike whichever carrier it came from.
+  // Absolutised here: `resolveUrlFn` never touches the id or a query, so a bare href would reach
+  // enrichment with no scheme and address nothing.
   const absoluteHref = parseUrl(href, 'https://www.facebook.com')?.href ?? href
 
   return {
@@ -78,9 +63,7 @@ const extractEmbed = (
   return composePluginEmbed(plugin, href, readFallback(find(element, fallbackSelector)))
 }
 
-// The SDK widget div, which is one carrier and not two: a post and a video arrive as the same
-// empty `data-href` div and differ only in the class, which is what names the plugin the script
-// would have built. Splitting them into a resolver each would state the same reader twice.
+// Facebook's SDK div for a post or a video, empty until a script feeds strip builds the widget.
 export const facebookWidgetEmbedResolver = createMarkupEmbedResolver(
   'div.fb-post[data-href], div.fb-video[data-href]',
   (element) => {
@@ -88,8 +71,7 @@ export const facebookWidgetEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The pre-SDK XFBML tag, still pasted into old blog templates. It is an empty element with the
-// url in a plain `href`, so left alone it is deleted as an empty tag and the post disappears.
+// The pre-SDK <fb:post> tag: an empty element carrying only the url in its href.
 export const facebookXfbmlEmbedResolver = createMarkupEmbedResolver(
   'fb\\:post[href]',
   (element) => {
@@ -97,10 +79,7 @@ export const facebookXfbmlEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The AMP component, which names which plugin it wants in `data-embed-as` (post, video or
-// comment). A comment thread is page chrome, not the article's content, so only the other two
-// resolve. Nothing removes the refused element either: the non-content pass names `.fb-comments`,
-// which is the div form, and stripEmptyTags skips custom elements, so it reaches the reader inert.
+// The <amp-facebook> component, empty without the AMP runtime.
 export const facebookAmpEmbedResolver = createMarkupEmbedResolver(
   'amp-facebook[data-href]',
   (element) => {
@@ -114,22 +93,15 @@ export const facebookAmpEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The plugin url the SDK builds at runtime, which is also what Facebook's own embed dialog
-// hands a publisher to paste. It is the more common of the two forms, so most Facebook embeds
-// arrive already pointing at a working player and only need naming. Older SDKs prefixed the
-// path with their Graph API version (`/v2.5/plugins/post.php`), and those urls still serve
-// the same plugin, so the version segment is accepted and ignored.
+// `/plugins/post.php` or `/plugins/video.php`, with or without a Graph API version in front.
+// Older SDKs prefixed their Graph API version, and those urls still serve the same plugin.
 const pluginPathRegex = /^(?:\/v\d+(?:\.\d+)?)?\/plugins\/(?:post|video)\.php$/
-// The pre-plugins video frame from old posts, which names its video in `video_id` instead of an
-// encoded href. It is rebuilt onto the current plugin, pointed at the watch page.
+// The pre-plugins video frame from old posts, naming its video in `video_id`.
 const legacyVideoPathRegex = /^\/video\/embed$/
 const safeVideoIdRegex = /^\d+$/
 
-// The dialog writes the chosen size into the query as well as onto the element, and the query
-// copy survives a CMS that strips presentation attributes. It is the publisher's own number,
-// not a guess: a Reel comes out vertical (267x476 and 304x540 are both in the corpus) and a
-// landscape video 560x314, where a shared default would make both 16:9. A size on the element
-// still wins, since the factory applies what the carrier declares over what this returns.
+// The dialog writes the chosen size into the query as well as onto the element. A Reel comes out
+// vertical, 267x476 or 304x540, and a landscape video 560x314.
 const querySize = (url: URL): { width?: number; height?: number } => {
   return {
     width: parsePixelSize(url.searchParams.get('width')),
@@ -137,19 +109,15 @@ const querySize = (url: URL): { width?: number; height?: number } => {
   }
 }
 
-// A video, reel or watch path is the video player; everything else Facebook frames is a post.
-// The word has to be a whole segment: `\b` also matches before `-` and `.`, both legal in a
-// page's vanity name, so it read `reel-big-fish` and `video.game.news` as videos.
+// Whole segments, not `\b`: `reel-big-fish` and `video.game.news` are page names.
+// A video, reel or watch path is the video player, and everything else Facebook frames is a post.
 const videoPathRegex = /(?:^|\/)(?:videos?|reel|watch)(?:\/|$)/i
 
-// The content pages Facebook frames, as a carrier holds them: a page's post, a page's video
-// (with the `vb.{id}` segment old exports wrote, or without) and a reel. Each needs something
-// after the route word, because `/{page}/posts/` and `/{page}/videos/` with nothing after them
-// are that page's Posts and Videos tabs, which are listings rather than content.
+// `/reel/{id}`, `/{page}/posts/{id}` or `/{page}/videos/{id}`.
+// `/{page}/posts/` and `/{page}/videos/` with nothing after them are the page's listing tabs.
 const contentPathRegex = /^\/(?:reel\/[^/]+|[^/]+\/(?:posts|videos)\/[^/]+)/
 
-// The watch page names its video in the query rather than the path, so the bare `/watch` hub is
-// not content: it is Facebook's video front page and every visitor sees something different.
+// The bare `/watch` hub is Facebook's video front page, where every visitor sees something else.
 const watchPathRegex = /^\/watch\/?$/
 
 // A Watch video id is numeric, in every spelling the corpus and the platform's own share urls
@@ -180,10 +148,6 @@ export const facebookResolveEmbed = (url: string): EmbedResolverResult | undefin
     return composePluginEmbed('video', watchUrl, { id: videoId, ...querySize(parsed) })
   }
 
-  // A carrier holding the page itself rather than a plugin url, which is what a publisher pastes
-  // straight from the address bar. Facebook refuses to be framed (`x-frame-options`), so left
-  // unclaimed it reaches a reader as a placeholder pointing at a blank frame. The plugin takes the
-  // page url as its href, which is the same repair the fallback blockquote already performs.
   if (contentPathRegex.test(parsed.pathname) || isWatchPage(parsed)) {
     const plugin = videoPathRegex.test(parsed.pathname) ? 'video' : 'post'
 
@@ -206,20 +170,20 @@ export const facebookResolveEmbed = (url: string): EmbedResolverResult | undefin
   return {
     provider: 'facebook',
     id: target.href,
+    // Kept as written: rebuilding it from the href would drop `show_text`, the caption toggle.
     src: url,
     url: href,
     ...querySize(parsed),
   }
 }
 
+// Facebook's plugin iframe, or a pasted post, video or watch page, which x-frame-options blanks.
 export const facebookIframeEmbedResolver = createUrlEmbedResolver(
   facebookHosts,
   facebookResolveEmbed,
 )
 
-// The same fallback blockquote as above, but the publisher kept only it and dropped the widget
-// div, so nothing names the plugin. Registered after the widget div, whose subtree this would
-// otherwise match a second time.
+// The embed dialog's fallback blockquote, kept by the publisher without its widget div.
 export const facebookBlockquoteEmbedResolver = createMarkupEmbedResolver(
   fallbackSelector,
   (element) => {

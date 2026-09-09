@@ -4,23 +4,9 @@ import { attr, jsonAttr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
-// The player is fluid-width and fixed-height, and the height depends on what sits inside it:
-// the compact bar for a single item, the taller box for a collection. They are a fallback for the
-// shapes that ship no size at all: a height the markup declares is the publisher's choice and wins
-// over these. The map doubles as the set of types that embed.
-//
-// These are the heights of the plain `/embed/{type}/{id}` frame, which is the only frame this
-// resolver mints. Spotify's oEmbed sizes the variant rather than the type, so asking it about a
-// video podcast answers 624x351 for a `/video` frame it appends itself, while the same show's
-// plain frame is the 152 audio card. Reading show heights off oEmbed therefore suggests a
-// per-type difference that does not exist: the video answers describe a different url.
-//
-// Measured 2026-09-07 in Chrome at 320, 640 and 1280 wide: the width never moves the height. The
-// player takes its height from the frame instead, from 80 up to 352 for a track, an episode and a
-// show, where it stops growing, and with no ceiling found for an album, a playlist and an artist,
-// which filled a 600-tall frame. So 152 and 352 are frames the player fits, not heights it
-// renders on its own, and they fire only when the carrier states no size, since `decideSize`
-// takes the carrier's first.
+// The player is fluid-width and fixed-height: a compact bar for a single item, a taller box for
+// a collection.
+// oEmbed answers 351 for a show's /video frame, and the plain frame minted here is the 152 card.
 const spotifyHeights = toMap({
   track: 152,
   episode: 152,
@@ -37,19 +23,11 @@ const safeIdRegex = /^[a-zA-Z0-9]+$/
 // `embed` opens a player path, `embed-podcast` its older podcast-only twin, `intl-{lang}` a
 // localized page path. Whatever follows the id (`/video` on a video podcast) is decorative.
 const pathPrefixRegex = /^(?:embed|embed-podcast|intl-[a-z]{2})$/
-// The pre-2017 snippet framed `embed.spotify.com/?uri=spotify:{type}:{id}`, naming the track
-// in a query parameter instead of the path. That host still serves a player, so these resolve
-// to the modern URL instead of falling through to the generic iframe path. A playlist is named
-// through its owner (`spotify:user:{handle}:playlist:{id}`), so the type and id are the last
-// pair, not the only one.
+// spotify:{type}:{id}, or the owned playlist form spotify:user:{handle}:playlist:{id}.
+// The pre-2017 snippet framed `embed.spotify.com/?uri=spotify:{type}:{id}`, and that host still
+// serves a player.
 const legacyUriRegex = /^spotify:(?:.*:)?([a-z]+):([a-zA-Z0-9]+)$/
-// The same parameter also carries an ordinary open.spotify.com url rather than a `spotify:` uri.
-// Its type and id sit in the path, and every spelling the carrier's own path has, the parameter
-// has too: the `intl-{lang}` prefix, an `/embed/` prefix and the `user/{handle}/playlist/{id}`
-// ownership form. So it is read by the same path reader rather than a second pattern that would
-// support a narrower set of urls than the carrier one line above it.
-// The snippet writes `Spotify Embed: {name}`, and the name is the only part worth keeping: the
-// rest names the widget, which the placeholder already says.
+// The snippet writes the title as `Spotify Embed: {name}`.
 const titlePrefixRegex = /^Spotify Embed:\s*/
 
 type SubstackItemAttributes = {
@@ -77,9 +55,9 @@ const readSubstackItem = (element: Element, type: string): Partial<EmbedResolver
   }
 
   const description = attributes.description?.trim()
-  // The card holds the act under the title and the type decides the field. A show card holds the
-  // publisher Spotify's own show page prints, verbatim on 6 of 6 real show cards, a track the
-  // artist, and an episode its show's publisher and not its own, on 77 of 81 episode cards.
+  // The card states the act under the title, and which field it is depends on the type:
+  // Spotify's own show page names the publisher there and its track and album pages the artist.
+  // An episode card names the show's act, a person or a network, never the show.
   const isShow = type === 'show'
 
   return {
@@ -107,6 +85,7 @@ const readPathPair = (url: URL | undefined): [string, string] | undefined => {
   return owned[0] && owned[1] ? [owned[0], owned[1]] : undefined
 }
 
+// Spotify's player iframe, in the modern path form and the pre-2017 embed.spotify.com/?uri= form.
 export const spotifyResolveEmbed = (
   url: string,
   element?: Element,
@@ -117,6 +96,9 @@ export const spotifyResolveEmbed = (
     return
   }
 
+  // The `uri` parameter also carries an open.spotify.com url, in every spelling the carrier's own
+  // path has: the `intl-{lang}` prefix, an `/embed/` prefix and the `user/{handle}/playlist/{id}`
+  // ownership form.
   const uri = parsed.searchParams.get('uri') ?? undefined
   const legacy = uri?.match(legacyUriRegex)
   // The type and id are taken as a pair from whichever source names both, never one from each:
@@ -140,8 +122,7 @@ export const spotifyResolveEmbed = (
     src: `https://open.spotify.com/embed/${type}/${id}`,
     url: `https://open.spotify.com/${type}/${id}`,
     height: spotifyHeights.get(type),
-    // Some payloads carry the title key with an empty string, so a blank card title falls
-    // through to the stated one instead of shadowing it.
+    // Some payloads carry an empty title string, and ?? would let it shadow the stated one.
     title: card.title?.trim() || stated,
     author: card.author,
     publisher: card.publisher,
@@ -151,7 +132,3 @@ export const spotifyResolveEmbed = (
 }
 
 export const spotifyEmbedResolver = createUrlEmbedResolver(spotifyHosts, spotifyResolveEmbed)
-
-// No play request. The player posts `{ type: 'ready' }` and takes a `{ command: 'play' }` object,
-// answering that it is playing and buffering, but loaded in Chrome by a click the audio never
-// started from it. Nothing to send until it does.

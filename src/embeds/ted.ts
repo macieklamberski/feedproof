@@ -31,13 +31,11 @@ export const extractTedTalk = (link: string): string | undefined => {
 // own and the talk is only in the flashVars, inside the ad targeting keys:
 // `adKeys=talk={slug};year=2010;theme=…`. The player is dead, so these embeds render nothing.
 const flashPlayerPathRegex = /\/assets\/player\/swf\/embedplayer\.swf$/i
+// The talk key in the flashVars adKeys value, spelled talk={slug};year={year}.
 const adKeysTalkRegex = /(?:^|;)talk=([a-z0-9_]+)/i
 
-// TED cut the talk key off at this length, so a slug that long is usually a prefix of the real one
-// but not always. Of the 17 sitting at the cap among 196 slugs mined from the corpus, 11 answered
-// 404 when probed on 2026-09-07 and 6 reached a real talk. Nothing else in the flashVars tells the
-// two apart, so the cap is refused whole: that costs those 6 talks and avoids 11 TED placeholders
-// whose link does not serve.
+// TED cut the talk key off at this length, so a slug this long is usually a prefix of the real
+// one but not always.
 const truncatedSlugLength = 55
 
 const readFlashTalk = (
@@ -53,31 +51,19 @@ const readFlashTalk = (
   const config = new URLSearchParams(flashVars(element) ?? '')
   const slug = keepIfMatches(config.get('adKeys')?.match(adKeysTalkRegex)?.[1], safeSlugRegex)
 
+  // A slug at the cap is a truncated key, and most of them lead to a talk page that 404s.
   if (!slug || slug.length >= truncatedSlugLength) {
     return
   }
 
-  // The snippet states its own poster, on `images.ted.com`, and those files still serve. It is
-  // taken as written rather than composed, since it carries no signature and no expiry and the
-  // talk's poster is not derivable from the slug.
+  // The snippet states its own poster in `su`, on `images.ted.com`, and those files still serve
+  // with no signature and no expiry.
   const poster = config.get('su') ?? undefined
 
   return { slug, thumbnail: parseUrlOnHosts(poster, tedHosts) ? poster : undefined }
 }
 
-// Feeds carry a short slug (`ethan_zuckerman`) and TED redirects it to the full one
-// (`ethan_zuckerman_listening_to_global_voices`), which cannot be derived offline, so one
-// redirect is unavoidable. `/embed/{slug}` reaches the canonical player in a single hop while
-// the `/talks/` path in the markup takes two, both checked 2026-08-11.
-//
-// The canonical talk page is derivable from the slug, which is what a reader gets to click. The
-// thumbnail is not derivable from it: TED's oEmbed returns `thumbnail_url` (verified live in the
-// platform research) but it is a lookup, so an iframe carrier leaves it to the enrichment hook,
-// which needs exactly the provider and id tagged here. Only the Flash carrier states one, in its
-// own configuration.
-//
-// The carrier's title names the talk rather than the player: across 26 titled frames in a 1/16
-// corpus sample the commonest value covered 12% of them.
+// TED's embed.ted.com iframe, and the dead Flash player that names the talk only in its flashVars.
 export const tedResolveEmbed = (
   url: string,
   element?: Element,
@@ -91,9 +77,14 @@ export const tedResolveEmbed = (
 
   const title = attr(element, 'title')
 
+  // The thumbnail is not derivable from the slug: TED's oEmbed returns `thumbnail_url`, so an
+  // iframe carrier leaves it to enrichment. Only the Flash carrier states one, in its own config.
   return {
     provider,
     id: talk.slug,
+    // Feeds carry a short slug (`ethan_zuckerman`) and TED redirects it to the full one, which
+    // cannot be derived offline. `/embed/{slug}` reaches the canonical player in a single hop
+    // while the `/talks/` path in the markup takes two.
     src: `https://embed.ted.com/embed/${talk.slug}`,
     url: `https://www.ted.com/talks/${talk.slug}`,
     ...trimObject({ thumbnail: talk.thumbnail, title }, Boolean),

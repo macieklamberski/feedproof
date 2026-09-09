@@ -13,33 +13,27 @@ const applePodcastsHosts = ['podcasts.apple.com']
 // optional. A music id is numeric, a playlist or station id carries a two-letter prefix
 // (`pl.`, `ra.`) and a podcast id an `id` one.
 const storefrontRegex = /^[a-z]{2}$/
+// A numeric music id, a two-letter prefixed playlist or station id, or an `id`-prefixed podcast id.
 const safeIdRegex = /^(?:id\d+|\d+|[a-z]{2}\.[a-z0-9-]+)$/i
 const podcastIdPrefixRegex = /^id/
 
 // A track or episode id is always numeric. It comes off the query decoded and is written into
 // the id, so anything else, a separator or a dot segment included, is refused.
+// `i` names the track in an album or the episode in a show, and its player is the song one.
 const trackIdRegex = /^\d+$/
 
-// The player is fluid-width, and one item gets a much shorter box than a collection. These are a
-// fallback for the shapes that ship no size at all: a height the markup declares is the
-// publisher's choice and wins over these. Apple's own embed code declares 150 for a song, which
-// cuts 25px off the player it opens. A music video is the one kind that keeps a 16:9 picture
-// instead, so it has none. The map doubles as the set of kinds that embed.
-//
-// None of these numbers is a height a player was seen to render. The five music heights are
-// unmeasured: `embed.music.apple.com` sits at its grey placeholder with an empty `<main>`, at top
-// level and inside a frame alike. Podcasts render, and what they render is a ratio: in Chrome on
-// 2026-09-07 the show player at `podcast/the-daily/id1200361736` filled any frame it was given
-// and floored at 180 at 320 wide, 360 at 640 and 422 at 1280, so 450 is a frame it fits rather
-// than a height it asks for. The episode player, `?i=1000788126765`, floored at 160 at all three
-// widths and filled 175 and 450 alike. Changing any of them needs a browser at two widths.
+// The player is fluid-width. The podcast show player fills any frame and floors at 180 at 320
+// wide, 360 at 640 and 422 at 1280, and the episode player floors at 160 at every width.
 const appleHeights = toMap({
   album: 450,
   artist: 450,
   playlist: 450,
   podcast: 450,
   station: 450,
+  // Apple's own snippet declares 150 for a song, which cuts 25px off the player it opens.
   song: 175,
+  // Kept with no height: a music video is 16:9, and the map doubles as the set of kinds that
+  // embed.
   'music-video': undefined,
 })
 
@@ -60,10 +54,6 @@ export const appleResolveEmbed = (url: string): EmbedResolverResult | undefined 
 
   const isPodcast = isOnHosts(parsed, applePodcastsHosts)
   const host = isPodcast ? 'podcasts.apple.com' : 'music.apple.com'
-  // `i` names the track inside an album or the episode inside a show, so where it is present
-  // it is the thing being embedded, and the player is the song one whatever the path says.
-  // Where it is absent the id is the path's own, which is numeric for music, `pl.`/`ra.`
-  // prefixed for a playlist or station, and `id`-prefixed for a podcast.
   const trackId = keepIfMatches(parsed.searchParams.get('i'), trackIdRegex)
   const id = trackId ?? pathId.replace(podcastIdPrefixRegex, '')
   // A refused `i` is dropped from the player url as well: the resolver does not forward a value
@@ -92,9 +82,8 @@ type SubstackPodcastAttributes = {
   releaseDate?: string
 }
 
-// The unit of `duration` follows `isEpisode`: an episode states milliseconds and a show states
-// seconds. Nothing in the payload says so, and the two differ by a factor no reader would
-// question, so a show would otherwise be published as a runtime a thousand times too short.
+// An episode's `duration` is milliseconds and a show's is seconds.
+// Nothing in the payload says so.
 const readDuration = (attributes: SubstackPodcastAttributes): number | undefined => {
   if (!attributes.duration) {
     return
@@ -103,9 +92,8 @@ const readDuration = (attributes: SubstackPodcastAttributes): number | undefined
   return attributes.isEpisode ? Math.round(attributes.duration / 1000) : attributes.duration
 }
 
-// The component name is on the container while `data-attrs` sits on the iframe inside it, so the
-// two are read from different elements. `targetUrl` is deliberately dropped: it is the same page
-// this resolver already composes, with an affiliate token added.
+// The component name is on the container while `data-attrs` sits on the iframe inside it. The
+// payload's `targetUrl` is the same page this resolver composes, with an affiliate token added.
 const readSubstackPodcast = (element: Element): Partial<EmbedResolverResult> => {
   if (!element.closest('[data-component-name="ApplePodcastToDom"]')) {
     return {}
@@ -121,11 +109,11 @@ const readSubstackPodcast = (element: Element): Partial<EmbedResolverResult> => 
     title: attributes.title || undefined,
     // A show card states the show's own title here, so only an episode has a publication to name.
     // Apple's episode page reads `Podcast Episode · Undertone` while its show page reads a genre
-    // and a cadence, `Design Podcast · Updated Weekly`, and never a publisher (checked 2026-09-09).
+    // and a cadence, `Design Podcast · Updated Weekly`, and never a publisher.
     publisher: (attributes.isEpisode && attributes.podcastTitle) || undefined,
     // Apple names the byline `artistName` on a show and on an episode alike, and it holds a
     // person, a network or both ("Evan Epstein", "The New York Times", "Guy Raz | Wondery"),
-    // so it cannot answer who publishes (checked 2026-09-09).
+    // so it cannot answer who publishes.
     author: attributes.podcastByline || undefined,
     thumbnail: attributes.imageUrl || undefined,
     date: attributes.releaseDate || undefined,
@@ -133,6 +121,7 @@ const readSubstackPodcast = (element: Element): Partial<EmbedResolverResult> => 
   }
 }
 
+// Apple's music and podcast player iframe. Substack wraps it in a card carrying JSON metadata.
 export const appleEmbedResolver = createUrlEmbedResolver(appleHosts, (url, element) => {
   const result = appleResolveEmbed(url)
 

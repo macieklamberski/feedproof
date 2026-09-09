@@ -30,6 +30,7 @@ const readWidgetId = (url: URL): string | undefined => {
   return segments[0] === 'widget_code' && segments[1] === 'html_widget' ? segments[2] : undefined
 }
 
+// The Flash players sit on cache.reverbnation.com, which serves swf files and nothing else.
 const readFlashId = (url: URL): string | undefined => {
   if (!flashPathRegex.test(url.pathname)) {
     return
@@ -58,26 +59,18 @@ export const reverbnationResolveEmbed = (url: string): EmbedResolverResult | und
     return
   }
 
+  // No page url: reverbnation.com/artist/{id} and its siblings all 404 for the numeric id.
+  // No size either: the widget reflows, 500 tall at 1200 wide and 400 tall at 400 wide, neither a
+  // fixed height nor a ratio. The widget page carries the slug that names the artist's page.
   return {
     provider: 'reverbnation',
     id,
-    // The html widget's query selects which player is drawn and what it holds, so a frame that
-    // already names one keeps its own. What changes is the scheme and the host: 37 of the 145
-    // widget urls in the corpus are `http://` and the Flash ones sit on `cache.reverbnation.com`,
-    // which serves swf files and nothing else.
+    // The html widget's query selects which player is drawn and what it holds.
     src: composeSource(id, widget ? parsed.search : ''),
   }
 }
 
-// No size. The widget reflows rather than scaling: at 1200 px wide it measured 500 tall and at
-// 400 px wide 400 tall, which is neither a fixed height nor a constant ratio, and the corpus
-// agrees that there is no one answer, with `widget_id=55` frames stating 150 (39), 520 (26),
-// 265 (16), 500 (10) and 1000 (4). What the publisher declared is the only honest number here.
-//
-// No page url either. `reverbnation.com/{slug}` is the artist's page and the numeric id does not
-// address it: `reverbnation.com/artist/1018382`, `/c/1018382` and
-// `main/redirect_to_artist?artist_id=1018382` all 404. The widget page carries the slug, so that
-// is an enrich-time read.
+// ReverbNation's html widget iframe and the Flash players under widgets/swf/ naming the same id.
 export const reverbnationEmbedResolver = createUrlEmbedResolver(
   reverbnationHosts,
   reverbnationResolveEmbed,
