@@ -335,16 +335,13 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
         height: 152,
         title: 'History Impossible',
         publisher: 'Alexander von Sternberg',
-        description: 'Podcast',
         thumbnail: 'https://i.scdn.co/image/ab6765630000ba8a67fda8c427b5b687fc2e1122',
       }
 
       expect(await extract(value)).toEqual(expected)
     })
 
-    // An episode card states the show's own act, which is a person as often as a network, so it
-    // answers who made the show and not who publishes it.
-    it('should carry an episode card act as the author', async () => {
+    it('should carry an episode card act as the publisher', async () => {
       const episodeCardAttrs = jsonAttrValue({
         image: 'https://i.scdn.co/image/ab6765630000ba8a9f41b6a60769dfb6bd6b41e7',
         title: '2. Tim Ingold: Ecologies of Perception',
@@ -367,7 +364,7 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
         url: 'https://open.spotify.com/episode/2UkLIeyl69vt0cVJcqLljy',
         height: 152,
         title: '2. Tim Ingold: Ecologies of Perception',
-        author: 'Peter Holliday',
+        publisher: 'Peter Holliday',
         thumbnail: 'https://i.scdn.co/image/ab6765630000ba8a9f41b6a60769dfb6bd6b41e7',
       }
 
@@ -395,7 +392,37 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
         url: 'https://open.spotify.com/episode/4BZArSMbp2VXkvtemKg8wX',
         height: 152,
         title: 'Counterrevolution in Egypt (S. 15, Ep. 10)',
-        author: 'Marc Lynch',
+        publisher: 'Marc Lynch',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    it('should state no description when a show card holds only the type', async () => {
+      const showLabelCardAttrs = jsonAttrValue({
+        image: 'https://i.scdn.co/image/ab6765630000ba8afdd9d1a708b5dfd667da4f70',
+        title: 'Hello Monday with Jessi Hempel',
+        subtitle: 'LinkedIn',
+        description: 'Podcast',
+        url: 'https://open.spotify.com/show/1UpjOrXiDCANThT21viw4E',
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap podcast"
+          data-attrs="${showLabelCardAttrs}"
+          src="https://open.spotify.com/embed/show/1UpjOrXiDCANThT21viw4E"
+          data-component-name="Spotify2ToDOM"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'show/1UpjOrXiDCANThT21viw4E',
+        src: 'https://open.spotify.com/embed/show/1UpjOrXiDCANThT21viw4E',
+        url: 'https://open.spotify.com/show/1UpjOrXiDCANThT21viw4E',
+        height: 152,
+        title: 'Hello Monday with Jessi Hempel',
+        publisher: 'LinkedIn',
+        thumbnail: 'https://i.scdn.co/image/ab6765630000ba8afdd9d1a708b5dfd667da4f70',
       }
 
       expect(await extract(value)).toEqual(expected)

@@ -40,13 +40,15 @@ type SubstackItemAttributes = {
 const spotifyHosts = ['spotify.com']
 const spotifyImageHosts = ['scdn.co']
 
-// The card prints the item's type where a description would go, so that field usually repeats
-// what the id already says.
-const typeLabels = new Set([...spotifyHeights.keys(), 'podcast episode'])
+// Substack writes its own word for the type where a description would go, and a show card
+// says `Podcast`.
+const typeLabels = new Set(['album', 'episode', 'playlist', 'podcast', 'podcast episode'])
+// The act under the title is the publisher Spotify's own show page prints: the show's own, and
+// for an episode the publisher of the show it ran in.
+const publisherTypes = new Set(['show', 'episode'])
 
 // Substack renders the player inside its own iframe and hangs the item's card on the same
-// element as JSON: the artwork, the title and the act. The description is kept only when it is
-// not one of those labels, which it almost always is.
+// element as JSON.
 const readSubstackItem = (element: Element, type: string): Partial<EmbedResolverResult> => {
   const attributes = jsonAttr<SubstackItemAttributes>(element, 'data-attrs')
 
@@ -55,15 +57,12 @@ const readSubstackItem = (element: Element, type: string): Partial<EmbedResolver
   }
 
   const description = attributes.description?.trim()
-  // The card states the act under the title, and which field it is depends on the type:
-  // Spotify's own show page names the publisher there and its track and album pages the artist.
-  // An episode card names the show's act, a person or a network, never the show.
-  const isShow = type === 'show'
+  const isPublisherType = publisherTypes.has(type)
 
   return {
     title: attributes.title,
-    author: isShow ? undefined : attributes.subtitle,
-    publisher: isShow ? attributes.subtitle : undefined,
+    author: isPublisherType ? undefined : attributes.subtitle,
+    publisher: isPublisherType ? attributes.subtitle : undefined,
     description:
       description && !typeLabels.has(description.toLowerCase()) ? description : undefined,
     thumbnail: parseUrlOnHosts(attributes.image, spotifyImageHosts) ? attributes.image : undefined,

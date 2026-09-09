@@ -389,7 +389,7 @@ describeForEachParser('Substack', (parseHtml) => {
         data-embed-src="https://open.spotify.com/embed/episode/aB3dEfGhIjKlMnOpQrStUv"
         data-embed-url="https://open.spotify.com/episode/aB3dEfGhIjKlMnOpQrStUv"
         data-embed-title="Episode 42: Field Recording"
-        data-embed-author="Casey Host"
+        data-embed-publisher="Casey Host"
         data-embed-thumbnail="https://i.scdn.co/image/ab6765630000ba8a0000000000000000000000ff"
         data-embed-height="232"
       ></div>
