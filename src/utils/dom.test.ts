@@ -4,6 +4,7 @@ import {
   attr,
   find,
   findConfigScript,
+  flashVar,
   flashVars,
   formatRatio,
   getElementDimensions,
@@ -1052,6 +1053,26 @@ describeForEachParser('flashVars', (parseHtml) => {
 
   it('should return undefined for a nullish element', () => {
     expect(flashVars(undefined)).toBeUndefined()
+  })
+})
+
+describeForEachParser('flashVar', (parseHtml) => {
+  it('should read the named value out of the config', () => {
+    const document = parseHtml('<embed src="player.swf" flashvars="config=1&id=2">')
+    const element = queryElement(document, 'embed')
+
+    expect(flashVar(element, 'id')).toBe('2')
+  })
+
+  it('should return undefined when the config names something else', () => {
+    const document = parseHtml('<embed src="player.swf" flashvars="config=1">')
+    const element = queryElement(document, 'embed')
+
+    expect(flashVar(element, 'id')).toBeUndefined()
+  })
+
+  it('should return undefined for a nullish element', () => {
+    expect(flashVar(undefined, 'id')).toBeUndefined()
   })
 })
 

@@ -143,6 +143,11 @@ export const flashVars = (element: Nullish<Element>): string | undefined => {
   return attr(element, 'flashvars') ?? paramValue(element?.parentElement, 'flashvars')
 }
 
+// One named value out of that configuration, for a carrier that names a single thing.
+export const flashVar = (element: Nullish<Element>, name: string): string | undefined => {
+  return new URLSearchParams(flashVars(element)).get(name) ?? undefined
+}
+
 // The value of a named `<param>` under `root`. Flash-era snippets carry their whole
 // configuration this way, either beside the carrier for an `<object>` wrapper or, where the
 // player is a script rather than a movie, inside the element itself. The name is matched
