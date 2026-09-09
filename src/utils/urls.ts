@@ -105,6 +105,21 @@ export const decodeSegment = (segment: string | undefined): string | undefined =
   } catch {}
 }
 
+// Decodes a percent-encoded value, handing back the raw text when the escape is malformed, for a
+// field the undecoded form still reads as. A falsy value returns undefined, since
+// decodeURIComponent answers the string "undefined" for a missing one.
+export const decodeOrKeep = (value: string | undefined): string | undefined => {
+  if (!value) {
+    return
+  }
+
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 // A Flash-era player took its options with `&` and no `?`, so `{id}&autoplay=1` arrives as one
 // path segment. The head is the id the platform's own client reads out of it; whether the tail
 // is carried into the minted query or dropped is each platform's own call, decided by what its
