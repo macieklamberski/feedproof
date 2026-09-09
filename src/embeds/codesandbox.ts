@@ -104,7 +104,7 @@ export const codesandboxResolveEmbed = (
     src: url,
     url: `https://codesandbox.io/${target.pagePath}`,
     height: defaultSandboxHeight,
-    ...trimObject({ title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 

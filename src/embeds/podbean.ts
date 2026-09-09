@@ -70,7 +70,7 @@ export const podbeanResolveEmbed = (
     id,
     src: `https://www.podbean.com/player-v2/?i=${id}`,
     height,
-    ...trimObject({ title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 

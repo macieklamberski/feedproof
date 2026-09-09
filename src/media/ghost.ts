@@ -1,3 +1,4 @@
+import { trimObject } from 'trousse'
 import type { MediaResolver, MediaResolverResult } from '../types.js'
 import { attr, getElementDimensions } from '../utils/dom.js'
 import * as styles from '../utils/styles.js'
@@ -63,7 +64,7 @@ export const ghostMediaResolver: MediaResolver = {
     return {
       tag: 'audio',
       src: source,
-      ...(title && { title }),
+      ...trimObject({ title }, Boolean),
     }
   },
 }

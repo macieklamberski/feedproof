@@ -96,7 +96,7 @@ export const tedResolveEmbed = (
     id: talk.slug,
     src: `https://embed.ted.com/embed/${talk.slug}`,
     url: `https://www.ted.com/talks/${talk.slug}`,
-    ...trimObject({ thumbnail: talk.thumbnail, title }),
+    ...trimObject({ thumbnail: talk.thumbnail, title }, Boolean),
   }
 }
 

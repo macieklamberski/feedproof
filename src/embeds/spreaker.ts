@@ -63,7 +63,7 @@ export const spreakerResolveEmbed = (
     src: `https://widget.spreaker.com/player?${embed.param}=${embed.id}`,
     url: `https://www.spreaker.com/${embed.kind}/${embed.id}`,
     height: playerHeight,
-    ...trimObject({ title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 
@@ -114,7 +114,7 @@ export const spreakerAnchorEmbedResolver = createMarkupEmbedResolver(
 
     return {
       ...result,
-      ...trimObject({ height: stated, title }),
+      ...trimObject({ height: stated, title }, Boolean),
     }
   },
 )

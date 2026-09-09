@@ -285,6 +285,26 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    it('should state no title for a card whose title is blank', async () => {
+      const value = html`
+        <div class="kg-card kg-audio-card">
+          <div class="kg-audio-player-container">
+            <audio src="https://example.com/content/media/track.mp3" preload="metadata"></audio>
+            <div class="kg-audio-title"> </div>
+            <div class="kg-audio-player">
+              <span>0:00</span>
+            </div>
+          </div>
+        </div>
+      `
+      const expected: MediaResolverResult = {
+        tag: 'audio',
+        src: 'https://example.com/content/media/track.mp3',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     it('should mint a bare audio element for a card that prints no title', async () => {
       const value = html`
         <div class="kg-card kg-audio-card">

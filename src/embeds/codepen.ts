@@ -142,12 +142,15 @@ const parseTarget = (value: string | undefined): CodepenTarget | undefined => {
   return {
     kind,
     slug,
-    ...trimObject({
-      user,
-      ownerPath: user && (isTeam ? `team/${user}` : user),
-      grants: trimObject(grants),
-      height,
-    }),
+    ...trimObject(
+      {
+        user,
+        ownerPath: user && (isTeam ? `team/${user}` : user),
+        grants: trimObject(grants, Boolean),
+        height,
+      },
+      Boolean,
+    ),
   }
 }
 

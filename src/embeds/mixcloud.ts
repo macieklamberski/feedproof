@@ -149,7 +149,7 @@ export const mixcloudResolveEmbed = (
     url: `https://www.mixcloud.com/${show}/`,
     height:
       options.includes('mini') && options.includes('hide_cover') ? miniPlayerHeight : playerHeight,
-    ...trimObject({ title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 

@@ -71,7 +71,7 @@ export const omnyResolveEmbed = (
     id: clip,
     src: `https://omny.fm/shows/${clip}/embed${query}`,
     height: playerHeight,
-    ...trimObject({ title }),
+    ...trimObject({ title }, Boolean),
   }
 }
 
