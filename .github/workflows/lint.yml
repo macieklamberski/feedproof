@@ -9,3 +9,14 @@ jobs:
   lint:
     uses: macieklamberski/kvalita/.github/workflows/shared-lint.yml@main
     secrets: inherit
+
+  comments:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun scripts/check-comments.ts --base ${{ github.event.pull_request.base.sha || github.event.before }}

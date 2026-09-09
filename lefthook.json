@@ -3,5 +3,13 @@
     "node_modules/kvalita/configs/lefthook-biome.json",
     "node_modules/kvalita/configs/lefthook-typescript.json",
     "node_modules/kvalita/configs/lefthook-commitlint.json"
-  ]
+  ],
+  "pre-commit": {
+    "commands": {
+      "comments": {
+        "glob": "src/**/*.ts",
+        "run": "bun scripts/check-comments.ts --cached"
+      }
+    }
+  }
 }
