@@ -1,13 +1,9 @@
 import type { Nullish } from 'trousse'
 
-// The declarations of one `style` attribute, by lowercase property name. Typed with an explicit
-// `undefined` because the project does not run `noUncheckedIndexedAccess`, and without it a
-// missing property reads as a `string` the callers would stop guarding.
+// The explicit `undefined` stands in for noUncheckedIndexedAccess, which the project does not run.
 export type Declarations = Record<string, string | undefined>
 
-// Nothing is matched ahead of the `!`, because the value comes off a feed and an unbounded
-// `\s*` in front of it costs two seconds on a 120 KB declaration. The whitespace it leaves
-// behind is trimmed with the rest of the value.
+// Nothing is matched ahead of the `!`: an open `\s*` there is quadratic on a long declaration.
 const importantRegex = /!\s*important\s*$/i
 // An unterminated comment runs to the end of the attribute, the way a browser closes it.
 const commentRegex = /\/\*.*?(?:\*\/|$)/gs
@@ -21,16 +17,8 @@ const resetByShorthand = new Map([
   ['padding', ['padding-top', 'padding-bottom']],
 ])
 
-// Reads a `style` attribute into its declarations, keyed by lowercase property name. CSS property
-// names are case-insensitive, so `MAX-WIDTH:800px` is a declaration a browser honours, and neither
-// parser can be asked for it: linkedom stores the name as written but only ever looks up the
-// lowercase form, and jsdom drops the declaration while parsing (checked 2026-08-20). Custom
-// properties keep the case they were written in, the one place CSS is case-sensitive.
-//
-// Finding the declaration boundaries is the whole job, and why this is a scan rather than a regex
-// per property. A `;` inside `url(data:image/png;base64,…)` or a quoted string does not end a
-// declaration, and only a top-level `:` separates a name from its value. A repeated property takes
-// its last value, the way a browser resolves it.
+// Neither linkedom nor jsdom answers `element.style` for a property name written in uppercase.
+// A browser honours `MAX-WIDTH:800px` all the same, checked 2026-08-20.
 const parseStyles = (style: string): Declarations => {
   const styles: Declarations = Object.create(null)
   let declarationStart = 0
@@ -39,8 +27,7 @@ const parseStyles = (style: string): Declarations => {
   let quote = ''
   let hasComment = false
 
-  // The scan already stepped over the comments, so the text is cleaned only where one was seen.
-  // Cleaning every declaration would eat a `/*` that a quoted value states as its own content.
+  // Cleaning every declaration would eat a `/*` a quoted value states as its own content.
   const clean = (text: string) => {
     return hasComment ? text.replace(commentRegex, ' ') : text
   }
@@ -58,15 +45,18 @@ const parseStyles = (style: string): Declarations => {
       return
     }
 
+    // A custom property keeps its case, the one place CSS is case-sensitive.
     const name = property.startsWith('--') ? property : property.toLowerCase()
 
     for (const longhand of resetByShorthand.get(name) ?? []) {
       delete styles[longhand]
     }
 
+    // A repeated property takes its last value, the way a browser resolves it.
     styles[name] = value
   }
 
+  // A `;` inside `url(data:…;base64,…)` or a quote ends nothing, so a split on `;` will not do.
   for (let index = 0; index < style.length; index++) {
     const character = style[index]
 
@@ -102,8 +92,7 @@ const parseStyles = (style: string): Declarations => {
       continue
     }
 
-    // A comment is whitespace to a browser, so the `;` and `:` inside one start nothing. Only
-    // outside a quoted value and a function, where `/*` belongs to a url rather than to CSS.
+    // A comment is whitespace to a browser, so a `;` or `:` inside one starts nothing.
     if (character === '/' && style[index + 1] === '*') {
       const commentEnd = style.indexOf('*/', index + 2)
 
@@ -130,9 +119,7 @@ const parseStyles = (style: string): Declarations => {
   return styles
 }
 
-// The attribute is part of the cache key, so an element whose style is rewritten after it was
-// read parses again instead of answering from the stale declarations. Every element with no style
-// shares one frozen object, which a caller cannot corrupt for the rest of them.
+// Keyed on the attribute text as well, so a style rewritten after it was read parses again.
 const parsedStyles = new WeakMap<Element, { style: string; styles: Declarations }>()
 const noStyles: Declarations = Object.freeze(Object.create(null))
 
@@ -160,38 +147,24 @@ export const declarations = (element: Nullish<Element>): Declarations => {
   return styles
 }
 
-// The value of a property whose value is a keyword, lowercased. Values are stored as written,
-// because a url path, a `content` string and a custom property all keep their case, so only the
-// caller knows it is reading a keyword, where CSS is case-insensitive and `DISPLAY: NONE` is the
-// same declaration as `display: none`.
+// A keyword is case-insensitive in CSS, `DISPLAY: NONE` being `display: none`, while a url path,
+// a `content` string and a custom property keep their case.
 export const keyword = (element: Nullish<Element>, property: string): string | undefined => {
   return declarations(element)[property]?.toLowerCase()
 }
 
-// Matches a whole length value, so `50%` and `calc(100% - 2px)` state no pixel length. A leading
-// `+` is a sign CSS allows and the digits carry anyway; a leading `-` is not matched, because a
-// negative width is not a size. The numeric group gives each digit a single parse
-// (`[0-9]+(?:\.[0-9]+)?|\.[0-9]+`, not `[0-9]*\.?[0-9]+`), which the ambiguous form makes
-// quadratic on a long digit run.
+// CSS allows a leading `+` on a length. `50%` and `calc(100% - 2px)` state no pixel length.
+// The number group is `[0-9]+(?:\.[0-9]+)?|\.[0-9]+`, not `[0-9]*\.?[0-9]+`, which is quadratic.
 const pixelsRegex = /^\+?([0-9]+(?:\.[0-9]+)?|\.[0-9]+)\s*(?:px)?$/i
 
-// The pixel count an inline style states for one property, or undefined when it states none in
-// pixels. The digits come back as they were written, without the unit and unparsed, because the
-// callers want different bounds on the same read: a resolver taking a player's own size runs it
-// through parsePixelSize, while getElementDimensions has to keep 0, 1 and 2 for
-// removeTrackingPixels, which that bound would reject.
 export const pixels = (element: Nullish<Element>, property: string): string | undefined => {
   return declarations(element)[property]?.match(pixelsRegex)?.[1]
 }
 
-// Matches a whole CSS number, with the exponent and the sign the grammar allows. Checking the
-// shape is the point: `Number.parseFloat` alone answers 0 to spellings CSS does not have, `0x0`
-// among them, which would read as a fully transparent element.
+// parseFloat alone answers 0 to `0x0`, which would read as a fully transparent element.
 const numberRegex = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?%?$/i
 
-// The number a property states, for the ones that take a plain number rather than a length. A
-// percentage comes back as the fraction it names, so `50%` reads as 0.5, which is what opacity
-// means by it.
+// Opacity takes `50%` as 0.5.
 export const number = (element: Nullish<Element>, property: string): number | undefined => {
   const value = declarations(element)[property]
 
@@ -206,9 +179,8 @@ export const number = (element: Nullish<Element>, property: string): number | un
 
 const bgImageUrlRegex = /url\(['"]?([^'")]+)/
 
-// The first url in an element's inline `background-image`, for cards that paint their
-// thumbnail with CSS instead of an `<img>`. The shorthand states it among the colour and
-// the repeat, so both properties are read and the url is picked out of the value.
+// Some cards paint their thumbnail as an inline `background-image` or in the `background`
+// shorthand, with no `<img>`.
 export const bgImage = (element: Nullish<Element>): string | undefined => {
   const styles = declarations(element)
   const background = styles['background-image'] ?? styles.background

@@ -40,13 +40,7 @@ import vim from 'highlight.js/lib/languages/vim'
 import x86asm from 'highlight.js/lib/languages/x86asm'
 import type { HighlightFn } from '../types.js'
 
-// Languages absent from highlight.js's common build but common in feed code blocks.
-// Registering them lets an explicit class/attribute hint resolve to a grammar. A block with no
-// match is left as plain text. Built-in aliases (hs->haskell, clj->clojure, ...) come along
-// for free.
-//
-// Mathematica is deliberately left out for now: its grammar is a large built-in symbol table,
-// too heavy for the rare blocks that declare it.
+// Grammars outside highlight.js's common build that feed code blocks declare.
 export const extraLanguages: Record<string, LanguageFn> = {
   applescript,
   arduino,
@@ -92,11 +86,9 @@ for (const [name, grammar] of Object.entries(extraLanguages)) {
   hljs.registerLanguage(name, grammar)
 }
 
-// Popular hint tokens highlight.js does not resolve on its own, mapped to an
-// already-registered grammar. Tokens it already aliases (console, objc, golang,
-// cs, jsx, yml, sh, ...) need nothing.
-// A few are dialect approximations to the nearest grammar (emacs-lisp/elisp and
-// cl -> lisp, racket -> scheme, fish/tcsh/csh -> bash, terminal -> shell).
+// Hint tokens highlight.js does not resolve on its own, mapped to a registered grammar.
+// Some map a dialect to its nearest grammar: fish to bash, racket to scheme, elisp to lisp.
+// A registered grammar ships its own aliases: hs, clj, console, objc, golang, cs, jsx, yml, sh.
 export const languageAliases: Record<string, Array<string>> = {
   bash: ['fish', 'tcsh', 'csh'],
   c: ['clike'],
@@ -117,10 +109,7 @@ for (const [languageName, aliases] of Object.entries(languageAliases)) {
   hljs.registerAliases(aliases, { languageName })
 }
 
-// The default highlighter: highlight.js with the extra grammars and aliases
-// registered above. Returns undefined for a language highlight.js does not know,
-// so the block stays plain. Consumers can swap this via the highlightFn option to
-// transformContent (e.g. to plug in Shiki or Prism).
+// Highlights with highlight.js, or returns nothing for a language it does not know.
 export const hljsHighlightFn: HighlightFn = (text, language) => {
   if (!hljs.getLanguage(language)) {
     return
