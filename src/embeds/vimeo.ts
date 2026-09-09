@@ -13,27 +13,12 @@ const provider = 'vimeo'
 
 const safeVideoIdRegex = /^\d+$/
 
-// An unlisted video's privacy hash, which the player takes only in the query: the
-// `player.vimeo.com/video/{id}/{hash}` path spelling is a 404. Ten lowercase hex characters, and
-// case-sensitive, so it travels exactly as written. The query's `h` arrives decoded and is written
-// into the page url's path and the id, so it is held to this shape too: a `/` or a dot segment
-// there would let the feed choose the page.
 const unlistedHashRegex = /^[0-9a-f]{10}$/
 
 const vimeoHosts = ['vimeo.com']
 
-// Paths whose leading numeric id is not a video: a showcase and an album are playlists, a channel
-// and a group are listings, an event is a livestream and an on-demand page is a store front, and
-// each lives in its own id space, so that id would mint a player for an unrelated video. Channel
-// 927 and video 927 are both live and belong to different people. A collection can still name a
-// real video deeper in its path, which is what readCollectionVideoId reads.
 const collectionPaths = new Set(['showcase', 'album', 'channels', 'groups', 'event', 'ondemand'])
 
-// Vimeo's own pages sit where a video id does, and some of them carry a numeric id of their own:
-// `/users/{userId}` and `/manage/folders/{folderId}` both read as a video today, and user 152184
-// is also video 152184, which belongs to somebody else. The rest carry no numeric segment and are
-// named here anyway, so that refusing them does not rest on their last segment happening to be
-// non-numeric.
 const sitePathSegments = new Set([
   'about',
   'blog',
@@ -55,11 +40,6 @@ const sitePathSegments = new Set([
   'watch',
 ])
 
-// An album spells it `/album/{albumId}/video/{videoId}` and a showcase the same way, a group
-// spells it `/groups/{group}/videos/{videoId}`, while an on-demand page and a channel put the
-// video straight after their own segment. An event names its videos under `/videos/`, but its
-// bare and `/embed` forms are the common ones and both would read as a video here, so the event
-// player keeps going to the generic placeholder.
 const readCollectionVideoId = (segments: Array<string>): string | undefined => {
   if (segments[0] === 'showcase' || segments[0] === 'album') {
     return segments[2] === 'video' ? segments[3] : undefined
@@ -74,17 +54,8 @@ const readCollectionVideoId = (segments: Array<string>): string | undefined => {
   }
 }
 
-// A showcase is a playlist with its own player and its own id space, and `album` is what Vimeo
-// called one before renaming them in 2018. The album spelling is normalised away here because
-// `vimeo.com/album/{id}/embed` 301s onto the showcase player. oEmbed settles nothing either way:
-// it answers the two spellings of one id identically, down to the byte, live or dead alike.
 const showcasePaths = new Set(['showcase', 'album'])
 
-// No video id, so no poster, and no size: the showcase player is a grid whose shape is whatever
-// box the publisher gave it, and the carrier already states one. What the resolver adds is the
-// enrichment key, since `vimeo.com/showcase/{id}` resolves through Vimeo's keyless oEmbed to a
-// title, an author and a thumbnail, and a fabricated id answers 404 there (probed 2026-09-06).
-// The id is qualified because a showcase and a video share one numeric grammar.
 const composeShowcaseEmbed = (showcaseId: string): EmbedResolverResult => {
   return {
     provider,
@@ -120,7 +91,6 @@ const readReference = (link: string): VimeoReference | undefined => {
   }
 
   const segments = getPathSegments(url)
-  // The Flash player carried no id in the path at all: moogaloop.swf?clip_id={id}.
   const clipId = url.searchParams.get('clip_id')
 
   if (clipId) {
@@ -139,15 +109,11 @@ const readReference = (link: string): VimeoReference | undefined => {
     return id ? { id } : undefined
   }
 
-  // The hash follows the id it unlocks. A ten-digit video id matches the hash shape on its own,
-  // so a segment counts as one only where a video id comes directly before it.
   const hashIndex = segments.findIndex((segment, index) => {
     return (
       index > 0 && unlistedHashRegex.test(segment) && safeVideoIdRegex.test(segments[index - 1])
     )
   })
-  // The last numeric segment, which is the video in every remaining spelling: `/{id}`,
-  // `/video/{id}` and the review pages.
   const path = hashIndex === -1 ? segments : segments.slice(0, hashIndex)
   const id = keepIfMatches(
     path.findLast((segment) => safeVideoIdRegex.test(segment)),
@@ -171,9 +137,6 @@ export const extractVimeoId = (link: string): string | undefined => {
   return readReference(link)?.id
 }
 
-// The player url every caller that recovers an id has to build. Params are given as values, not
-// as a ready query string, so one carrying an `&` cannot open a parameter of its own. A start
-// offset is not one of them: it travels in the fragment, in Vimeo's `{n}s` form.
 export const composeEmbedUrl = (
   videoId: string,
   params?: Record<string, string>,
@@ -185,8 +148,6 @@ export const composeEmbedUrl = (
   return `https://player.vimeo.com/video/${videoId}${query}${start}`
 }
 
-// The player url for a caller holding a url nothing has checked: a page builder stores whatever
-// the publisher pasted, so the host is checked here the way the factory checks it for a carrier.
 export const readVimeoEmbedSrc = (link: string): string | undefined => {
   const url = parseUrlOnHosts(link, vimeoHosts)
   const videoId = url && extractVimeoId(url.href)
@@ -194,13 +155,8 @@ export const readVimeoEmbedSrc = (link: string): string | undefined => {
   return videoId ? composeEmbedUrl(videoId) : undefined
 }
 
-// `t` is the start offset, in Vimeo's `{n}s` form. The unlisted hash is carried by the reference
-// rather than picked from the query, because it also arrives as a path segment.
 const vimeoEmbedParams = ['t']
 
-// The `title` a share snippet writes is usually the video's own title, but sometimes a player
-// label. The labels are not filtered. They are localised into at least five languages and some
-// name a plugin, not the platform, so any list of them goes stale.
 export const vimeoResolveEmbed = (
   url: string,
   element?: Element,
@@ -220,24 +176,17 @@ export const vimeoResolveEmbed = (
 
   return {
     provider,
-    // Vimeo's own identity for an unlisted video joins the two with a colon, and the hash has to
-    // travel with the id: an oEmbed lookup for the bare id answers 404.
     id: hash ? `${videoId}:${hash}` : videoId,
     src: composeEmbedUrl(videoId, params),
-    // Without the hash the page loses its title and its poster, so it stays on the url too.
     url: `https://vimeo.com/${videoId}${hash ? `/${hash}` : ''}`,
     title,
-    // TODO: no thumbnail yet. Vimeo posters aren't derivable from the id (the URL
-    // carries an opaque hash), so they need an oEmbed lookup
-    // (https://vimeo.com/api/oembed.json?url=...) wired through enrichEmbedFn.
+    // TODO: no thumbnail. Vimeo posters are not derivable from the id and need an oEmbed lookup.
   }
 }
 
+// A Vimeo player iframe, a frame of a video or showcase page, or the Flash moogaloop player.
 export const vimeoEmbedResolver = createUrlEmbedResolver(vimeoHosts, vimeoResolveEmbed)
 
-// `dnt=1` turns off Vimeo's viewer tracking: no cookies and no analytics. `autoplay=1` starts
-// playback on the click that loads the player. Never `background=1`, which mutes the video and
-// strips its controls.
 export const vimeoRenderHint: EmbedRenderHint = {
   provider,
   params: { dnt: '1' },
