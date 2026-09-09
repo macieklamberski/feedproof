@@ -7,7 +7,6 @@ import type {
   TransformContext,
   WidgetResolver,
 } from '../../types.js'
-import { getElementDimensions } from '../../utils/dom.js'
 import { getImageFingerprint, getSizeKeywordRank, getUrlSizeHint } from '../../utils/images.js'
 import {
   absoluteUrlRegex,
@@ -20,6 +19,7 @@ import {
   createEmbedPlaceholder,
   createImage,
   createMediaElement,
+  getEmbedSize,
   isEmbedOrMediaResolver,
   isMediaResult,
   prepareEmbedMetadata,
@@ -255,13 +255,19 @@ const extractEnclosureFromEmbed = (enclosure: Enclosure, document: Document): En
     return rest
   }
 
-  const dimensions = getElementDimensions(frame)
+  // The size moves whole from whichever source states one, the enclosure's own Media RSS
+  // dimensions first and the frame's otherwise. Merging them field by field would put a width the
+  // feed stated beside a height the player's iframe stated, which is a box neither of them
+  // describes. A lone height is still a size, since that is what a fixed-height fluid-width player
+  // states, so what travels together is the source rather than both fields.
+  const frameSize = getEmbedSize(frame, 0)
+  const stated = rest.width || rest.height ? rest : frameSize
 
   return {
     ...rest,
     url: rest.url ?? frame.getAttribute('src') ?? undefined,
-    width: rest.width ?? dimensions.width,
-    height: rest.height ?? dimensions.height,
+    ...(stated.width && { width: stated.width }),
+    ...(stated.height && { height: stated.height }),
   }
 }
 
