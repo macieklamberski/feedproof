@@ -21,9 +21,9 @@ const saasHosts = new Set(['kaltura.com', 'www.kaltura.com', 'cdnapi.kaltura.com
 // gives the iframe. The player options in `flashvars[…]` travel with the rebuilt url.
 const scriptOnlyParams = ['autoembed', 'playerId', 'cache_st', 'width', 'height']
 
-// The label a generated Kaltura iframe carries in place of the video's name. Nothing measures it:
-// the corpus run that asked every other platform whether its carriers name the content never
-// scanned kaltura.com, so the label's prevalence and its localised spellings are both unknown.
+// The label a generated Kaltura iframe carries in place of the video's name. None of the 16
+// carriers measured states a title of any kind, so the suppression has nothing to fire on and no
+// localised spelling to extend it to. Sixteen is too thin to say the label never appears.
 const boilerplateTitle = 'Kaltura Player'
 
 type Entry = {
