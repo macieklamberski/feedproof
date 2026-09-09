@@ -207,10 +207,14 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
   })
 
   describe('audio cards', () => {
-    it('should resolve the upload and drop the card chrome', async () => {
+    it('should replace the chrome container but keep the cover image', async () => {
       const value = html`
         <div class="kg-card kg-audio-card">
-          <img src="https://example.com/thumb.jpg" alt="audio-thumbnail" class="kg-audio-thumbnail" />
+          <img
+            src="https://example.com/thumb.jpg"
+            alt="audio-thumbnail"
+            class="kg-audio-thumbnail"
+          />
           <div class="kg-audio-player-container">
             <audio src="https://example.com/content/media/track.mp3" preload="metadata"></audio>
             <div class="kg-audio-title">Track title</div>
@@ -222,13 +226,20 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
         </div>
       `
       const expected = html`
-        <figure>
-          <audio
-            src="https://example.com/content/media/track.mp3"
-            controls
-          ></audio>
-          <figcaption>Track title</figcaption>
-        </figure>
+        <div class="kg-card kg-audio-card">
+          <img
+            src="https://example.com/thumb.jpg"
+            alt="audio-thumbnail"
+            class="kg-audio-thumbnail"
+          />
+          <figure>
+            <audio
+              src="https://example.com/content/media/track.mp3"
+              controls
+            ></audio>
+            <figcaption>Track title</figcaption>
+          </figure>
+        </div>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
@@ -286,17 +297,35 @@ describeForEachParser('ghostMediaResolver', (parseHtml) => {
         </div>
       `
       const expected = html`
-        <audio
-          src="https://example.com/content/media/track.mp3"
-          controls
-        ></audio>
+        <div class="kg-card kg-audio-card">
+          <audio
+            src="https://example.com/content/media/track.mp3"
+            controls
+          ></audio>
+        </div>
       `
 
       expect(await transform(value)).toEqualHtml(expected)
     })
 
-    it('should return undefined for a card without an audio element', async () => {
-      const value = '<div class="kg-audio-card"><div class="kg-audio-player"></div></div>'
+    it('should return undefined for a container without an audio element', async () => {
+      const value = html`
+        <div class="kg-card kg-audio-card">
+          <div class="kg-audio-player-container">
+            <div class="kg-audio-player"></div>
+          </div>
+        </div>
+      `
+
+      expect(await extract(value)).toBeUndefined()
+    })
+
+    it('should not match the cleaned form', async () => {
+      const value = html`
+        <div class="kg-card kg-audio-card">
+          <audio src="https://example.com/content/media/track.mp3" preload="metadata" controls></audio>
+        </div>
+      `
 
       expect(await extract(value)).toBeUndefined()
     })

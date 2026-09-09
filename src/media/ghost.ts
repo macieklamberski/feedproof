@@ -7,13 +7,13 @@ import * as styles from '../utils/styles.js'
 // without `controls` (so it renders unplayable), the video's `poster` is a transparent
 // spacer gif (the real thumbnail sits in `data-kg-thumbnail`/`data-kg-custom-thumbnail` on
 // the figure), and the card's scripted player chrome survives as junk. Resolving the inner
-// element into a fresh native one drops the chrome wholesale. The video selector matches
-// the chrome container, not the figure, so the author's figcaption beside it survives. The
-// audio card is matched whole and its one piece of content, the track title, is carried over.
-// Cleaned feeds carry no `.kg-video-container`, so their video cards are left alone.
+// element into a fresh native one drops the chrome wholesale. Both selectors match the chrome
+// container and not the card, so whatever the author put beside it survives: the video's
+// figcaption, and the cover image the audio card hangs above its player. Cleaned feeds carry
+// neither container, so their cards are left alone.
 export const ghostMediaResolver: MediaResolver = {
   kind: 'media',
-  selector: '.kg-video-card .kg-video-container, .kg-audio-card',
+  selector: '.kg-video-card .kg-video-container, .kg-audio-card .kg-audio-player-container',
   extract: (element): MediaResolverResult | undefined => {
     if (element.classList.contains('kg-video-container')) {
       const video = element.querySelector('video[src]')
@@ -56,8 +56,8 @@ export const ghostMediaResolver: MediaResolver = {
       return
     }
 
-    // The track name Ghost prints beside the file. It is the one piece of the audio card that is
-    // content rather than chrome, and matching the card whole would otherwise delete it.
+    // Ghost prints the track name inside the player container rather than beside it, so unlike
+    // the video card's figcaption it goes with the chrome and has to be carried on the result.
     const title = element.querySelector('.kg-audio-title')?.textContent?.trim()
 
     return {
