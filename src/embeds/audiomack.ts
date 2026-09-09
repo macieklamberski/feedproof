@@ -1,5 +1,6 @@
 import { getPathSegments, toMap } from 'trousse'
 import type { EmbedResolverResult } from '../types.js'
+import { attr } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createUrlEmbedResolver } from '../utils/widgets.js'
 
@@ -48,7 +49,10 @@ const readTrack = (url: URL): Track | undefined => {
     : { artist: second, kind: third, slug: fourth, search: url.search }
 }
 
-export const audiomackResolveEmbed = (url: string): EmbedResolverResult | undefined => {
+export const audiomackResolveEmbed = (
+  url: string,
+  element?: Element,
+): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, audiomackHost)
   const track = parsed && readTrack(parsed)
 
@@ -70,6 +74,7 @@ export const audiomackResolveEmbed = (url: string): EmbedResolverResult | undefi
     id: path,
     src: `https://audiomack.com/embed/${path}${search}`,
     url: `https://audiomack.com/${path}`,
+    title: attr(element, 'title'),
     author: artist,
     height: audiomackHeights.get(kind),
   }

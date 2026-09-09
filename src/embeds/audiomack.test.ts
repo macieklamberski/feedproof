@@ -255,6 +255,26 @@ describeForEachParser('audiomackEmbedResolver', (parseHtml) => {
 
       expect(await extract(value)).toEqual(expected)
     })
+
+    it('should take the title the player frame states', async () => {
+      const value = html`
+        <iframe
+          src="https://audiomack.com/embed/theransomreport/song/episode-i"
+          title="Episode I with Rodney Coursey"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'audiomack',
+        id: 'theransomreport/song/episode-i',
+        src: 'https://audiomack.com/embed/theransomreport/song/episode-i',
+        url: 'https://audiomack.com/theransomreport/song/episode-i',
+        title: 'Episode I with Rodney Coursey',
+        author: 'theransomreport',
+        height: 252,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
   })
 
   describe('sad paths', () => {
