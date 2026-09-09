@@ -309,6 +309,38 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
+    // Spotify names a show by its publisher and every other type by its artist, so the same card
+    // field lands on a different result field.
+    it('should carry a show card act as the publisher', async () => {
+      const showCardAttrs = jsonAttrValue({
+        image: 'https://i.scdn.co/image/ab6765630000ba8a',
+        title: 'The Daily',
+        subtitle: 'The New York Times',
+        description: 'Show',
+        url: 'https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g',
+      })
+      const value = html`
+        <iframe
+          class="spotify-wrap podcast"
+          data-attrs="${showCardAttrs}"
+          src="https://open.spotify.com/embed/show/3IM0lmZxpFAY7CwMuv9H4g"
+          data-component-name="Spotify2ToDOM"
+        ></iframe>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'spotify',
+        id: 'show/3IM0lmZxpFAY7CwMuv9H4g',
+        src: 'https://open.spotify.com/embed/show/3IM0lmZxpFAY7CwMuv9H4g',
+        url: 'https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g',
+        height: 152,
+        title: 'The Daily',
+        publisher: 'The New York Times',
+        thumbnail: 'https://i.scdn.co/image/ab6765630000ba8a',
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
     // The card prints the type where a description would go, which the id already states.
     it('should state no description when the card holds only the type', async () => {
       const typeOnlyCardAttrs = jsonAttrValue({
