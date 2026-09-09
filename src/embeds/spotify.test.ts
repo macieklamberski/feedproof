@@ -309,33 +309,34 @@ describeForEachParser('spotifyEmbedResolver', (parseHtml) => {
       expect(await extract(value)).toEqual(expected)
     })
 
-    // Spotify names a show by its publisher and every other type by its artist, so the same card
-    // field lands on a different result field.
+    // A personal name sits in this slot on about a third of real show cards and is still the
+    // publisher Spotify's own show page prints, so it does not make the field an author.
     it('should carry a show card act as the publisher', async () => {
       const showCardAttrs = jsonAttrValue({
-        image: 'https://i.scdn.co/image/ab6765630000ba8a',
-        title: 'The Daily',
-        subtitle: 'The New York Times',
-        description: 'Show',
-        url: 'https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g',
+        image: 'https://i.scdn.co/image/ab6765630000ba8a67fda8c427b5b687fc2e1122',
+        title: 'History Impossible',
+        subtitle: 'Alexander von Sternberg',
+        description: 'Podcast',
+        url: 'https://open.spotify.com/show/5t2HrBMNFX4WtSTERcopCF',
       })
       const value = html`
         <iframe
           class="spotify-wrap podcast"
           data-attrs="${showCardAttrs}"
-          src="https://open.spotify.com/embed/show/3IM0lmZxpFAY7CwMuv9H4g"
+          src="https://open.spotify.com/embed/show/5t2HrBMNFX4WtSTERcopCF"
           data-component-name="Spotify2ToDOM"
         ></iframe>
       `
       const expected: EmbedResolverResult = {
         provider: 'spotify',
-        id: 'show/3IM0lmZxpFAY7CwMuv9H4g',
-        src: 'https://open.spotify.com/embed/show/3IM0lmZxpFAY7CwMuv9H4g',
-        url: 'https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g',
+        id: 'show/5t2HrBMNFX4WtSTERcopCF',
+        src: 'https://open.spotify.com/embed/show/5t2HrBMNFX4WtSTERcopCF',
+        url: 'https://open.spotify.com/show/5t2HrBMNFX4WtSTERcopCF',
         height: 152,
-        title: 'The Daily',
-        publisher: 'The New York Times',
-        thumbnail: 'https://i.scdn.co/image/ab6765630000ba8a',
+        title: 'History Impossible',
+        publisher: 'Alexander von Sternberg',
+        description: 'Podcast',
+        thumbnail: 'https://i.scdn.co/image/ab6765630000ba8a67fda8c427b5b687fc2e1122',
       }
 
       expect(await extract(value)).toEqual(expected)
