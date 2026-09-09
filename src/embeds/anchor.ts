@@ -5,28 +5,10 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const safeSegmentRegex = /^[A-Za-z0-9._-]+$/
 
-// One service, three host generations, all still live in feeds: `anchor.fm` became
-// `podcasters.spotify.com` became `creators.spotify.com`. The Spotify resolver matches the
-// spotify.com hosts but rejects these paths, so they fall through to here.
 const anchorHosts = ['anchor.fm', 'podcasters.spotify.com', 'creators.spotify.com']
 
-// One height for all three hosts, because there is one player: the `anchor.fm` and
-// `podcasters.spotify.com` spellings both redirect to the `creators.spotify.com` one.
-//
-// Measured 2026-09-07 in Chrome against two episodes: the painted card, artwork, title, play
-// button and progress bar, is 100 tall at 320, 640, 700 and 720 wide and 161 from 768 up, where
-// the artwork grows, and the page fills any taller frame with white below the card. So the height
-// steps at one breakpoint rather than tracking the width, and a reader's post column sits on the
-// short side of it. The measured 100 is what this states rather than the 102 Spotify's own
-// snippet writes, because 102 is the snippet's number and 100 is the card's: the two extra pixels
-// render as white. Publishers write 102 on every host, 2,124 of the 2,532 embed carriers that
-// declare a height across 744 corpus feeds, and those carriers keep their own number anyway. The
-// 245 that declare none are what this reaches, since `decideSize` takes the carrier's first.
 const playerHeight = 100
 
-// `anchor.fm/{show}/embed/episodes/{slug}`,
-// `podcasters.spotify.com/pod/show/{show}/embed/episodes/{slug}`,
-// `creators.spotify.com/pod/profile/{user}/embed/episodes/{slug}/{audioId}`.
 export const extractAnchorEpisode = (link: string): string | undefined => {
   const segments = getPathSegments(link)
   const marker = segments.indexOf('embed')
@@ -45,10 +27,6 @@ export const extractAnchorEpisode = (link: string): string | undefined => {
   return `${show}/${episode}`
 }
 
-// No offline metadata: the player carries none and Anchor's old oEmbed endpoint is gone, so
-// what this states is the provider, the episode and a height the markup often omits. The src
-// keeps its own host: the three generations are not known to be interchangeable, and minting
-// an unverified rewrite would risk a working embed.
 export const anchorResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const episode = extractAnchorEpisode(url)
   const parsed = parseUrl(url, placeholderBaseUrl)
@@ -65,4 +43,5 @@ export const anchorResolveEmbed = (url: string): EmbedResolverResult | undefined
   }
 }
 
+// Anchor's episode player iframe, on the anchor.fm host and the two Spotify hosts it became.
 export const anchorEmbedResolver = createUrlEmbedResolver(anchorHosts, anchorResolveEmbed)

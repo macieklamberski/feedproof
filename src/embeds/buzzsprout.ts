@@ -6,29 +6,13 @@ import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widg
 
 const provider = 'buzzsprout'
 
-// Buzzsprout embeds a player two ways: a WordPress shortcode shipping an empty div plus a
-// <script> whose src carries the ids, and a direct player iframe. Both name the same player, so
-// both resolve to the same placeholder. The script never runs in a reader and its div dies as an
-// empty tag, so without resolving it the player vanishes. Blog feeds carrying the shortcode have
-// no enclosure for the episode either (verified across the corpus carriers). The slug-less player
-// URL resolves with no key (verified 2026-08-08, 200 on a live episode). Any slug after the
-// episode id is decorative.
-//
-// A script naming the podcast alone is the show player, which carries every episode. The
-// url-keyed resolver deliberately leaves the show-level *page* url unmatched: there it falls
-// through to the generic fallback, which still renders a placeholder. The script carrier has no
-// such fallback, so the same shape costs the whole player.
 const buzzsproutHosts = ['buzzsprout.com']
+// /{podcast}/{episode}-{slug}.js, with or without episodes/.
 const episodeScriptPathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/]*)?\.js$/
 const showScriptPathRegex = /^\/(\d+)\.js$/
-// The page slug may not carry a dot, which is what keeps the enclosure out: the episode audio is
-// `buzzsprout.com/{podcast}/{episode}-{slug}.mp3` on the same host, identical up to the extension,
-// in both the bare and the `episodes/` spellings. The player minted from it would be the same
-// episode's, so nothing is gained by claiming it, and a playable file is what the feed stated.
+// /{podcast}/{episode}-{slug} with or without episodes/, the slug dot-free to keep .mp3 out.
 const episodePagePathRegex = /^\/(\d+)\/(?:episodes\/)?(\d+)(?:-[^/.]*)?$/
 
-// Both heights are what Buzzsprout's own script writes onto the iframe it builds: 200 for the
-// small episode player, 375 for the large show player (read from the served script, 2026-08-15).
 const episodeHeight = 200
 const showHeight = 375
 
@@ -44,9 +28,7 @@ const composeEmbed = (podcastId: string, episodeId?: string): EmbedResolverResul
   }
 }
 
-// The iframe carrier's title names the episode rather than the player: across 11 titled frames in
-// a 1/16 corpus sample the commonest value covered 9% of them. The script carrier has no title to
-// read, so only this half of the platform gains one.
+// Buzzsprout's player iframe, whose title names the episode.
 export const buzzsproutResolveEmbed = (
   url: string,
   element?: Element,
@@ -74,11 +56,10 @@ export const buzzsproutIframeEmbedResolver: EmbedResolver = createUrlEmbedResolv
   buzzsproutResolveEmbed,
 )
 
+// Buzzsprout's WordPress shortcode: an empty div and a script naming the ids, which no reader runs.
 export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
   'script[src*="buzzsprout.com"]',
   (element) => {
-    // The selector guarantees a src containing the host substring, so only the host and
-    // path checks can reject.
     const url = parseUrlOnHosts(attr(element, 'src'), buzzsproutHosts)
 
     if (!url) {
@@ -99,7 +80,6 @@ export const buzzsproutScriptEmbedResolver = createMarkupEmbedResolver(
   },
 )
 
-// The player takes no query to start, and Buzzsprout's help says so; it speaks player.js.
 export const buzzsproutRenderHint: EmbedRenderHint = {
   provider,
   isReady: isPlayerJsReady,
