@@ -138,6 +138,12 @@ export const brightcoveVideoJsEmbedResolver = createMarkupEmbedResolver(
 // sibling `<param>`. The federated player id in the path is not a modern player id, so the
 // minted url takes the account's default player, which is verified live: this shape answers
 // 200 while a bogus account 404s.
+//
+// A live account is not a live video. These carriers are from 2009 and most of what they name
+// is gone: of twenty sampled pairs, 8 accounts and 5 videos still answer, on a sample small
+// enough that the band is wide. Minting anyway is the better of the two, because the carrier's
+// own host is `c.brightcove.com` or `secure.brightcove.com`, and every name in their CNAME
+// chains lacks an A record, so refusing hands the placeholder a host that cannot be resolved.
 const federatedPathRegex = /\/services\/viewer\/federated_/
 
 const brightcoveFlashResolveEmbed = (
