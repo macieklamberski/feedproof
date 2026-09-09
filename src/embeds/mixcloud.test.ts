@@ -149,6 +149,7 @@ describe('mixcloudResolveEmbed', () => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      author: 'photogmusic',
       height: 160,
     }
 
@@ -164,6 +165,7 @@ describe('mixcloudResolveEmbed', () => {
       id: 'djgavinboyd/soul-has-no-tempo',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fdjgavinboyd%2Fsoul-has-no-tempo%2F&mini=1&hide_cover=1&light=1',
       url: 'https://www.mixcloud.com/djgavinboyd/soul-has-no-tempo/',
+      author: 'djgavinboyd',
       height: 60,
     }
 
@@ -180,6 +182,7 @@ describe('mixcloudResolveEmbed', () => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F&mini=1',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      author: 'photogmusic',
       height: 160,
     }
 
@@ -197,6 +200,7 @@ describe('mixcloudResolveEmbed', () => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      author: 'photogmusic',
       height: 160,
     }
 
@@ -221,6 +225,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      author: 'photogmusic',
       height: 160,
     }
 
@@ -239,6 +244,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'djselarom/dark-synthesis-25',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fdjselarom%2Fdark-synthesis-25%2F&hide_cover=1',
       url: 'https://www.mixcloud.com/djselarom/dark-synthesis-25/',
+      author: 'djselarom',
       height: 160,
       title: 'Dark Synthesis #25',
     }
@@ -260,6 +266,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'FakeIDRadio/4-natty-champs',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2FFakeIDRadio%2F4-natty-champs%2F',
       url: 'https://www.mixcloud.com/FakeIDRadio/4-natty-champs/',
+      author: 'FakeIDRadio',
       height: 160,
     }
 
@@ -281,6 +288,7 @@ describeForEachParser('mixcloudEmbedResolver', (parseHtml) => {
       id: 'photogmusic/no-filter',
       src: 'https://www.mixcloud.com/widget/iframe/?feed=%2Fphotogmusic%2Fno-filter%2F',
       url: 'https://www.mixcloud.com/photogmusic/no-filter/',
+      author: 'photogmusic',
       height: 160,
     }
 
@@ -308,6 +316,7 @@ describeForEachParser('mixcloud through the pipeline', (parseHtml) => {
         data-embed-id="photogmusic/no-filter"
         data-embed-url="https://www.mixcloud.com/photogmusic/no-filter/"
         data-embed-height="160"
+        data-embed-author="photogmusic"
       ></div>
     `
 
