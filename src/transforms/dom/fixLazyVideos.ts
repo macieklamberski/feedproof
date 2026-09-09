@@ -1,10 +1,7 @@
 import type { DomTransform } from '../../types.js'
 import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 
-// Promote a lazy <video> src (the real clip URL parked in a data-* attribute) into
-// `src`, and a lazy `data-poster` into `poster`, so a no-JS reader shows the still
-// frame and can play the clip. Only the <video> element itself is fixed here: lazy
-// <source> children are already handled by fixLazyImages.
+// A <video> whose clip and poster urls sit in lazy data-* attributes, so nothing shows without JS.
 export const fixLazyVideos: DomTransform = (context) => (document) => {
   for (const video of document.querySelectorAll('video')) {
     if (!isUsableSrc(video.getAttribute('poster'))) {

@@ -16,15 +16,8 @@ const hasDirectText = (element: Element): boolean => {
 // carry meaning of its own and stays.
 const styleWrapperTags = new Set(['span', 'div'])
 
-// A <code> nested directly inside another <code> (or a <pre> inside a <pre>) is a redundant
-// double-wrap some feeds emit. Readers size code with a relative font-size, so every extra
-// nesting level shrinks the text. Collapse to one wrapper: when the inner element is its
-// parent's sole child with no direct text that hoisting would fuse, lift the inner's children
-// out and drop it. Deeper nesting collapses across iterations as each level is revisited.
-//
-// A styling wrapper between a <pre> and its <code> is also dropped: readers make the code
-// the block's scroll container with a `pre > code` selector, so a wrapper in between leaves
-// wide code overflowing its background instead of scrolling.
+// A <code> in a <code>, or a span between <pre> and <code>: shrunk text or broken scrolling.
+// Readers size code with a relative font-size and scroll it through a `pre > code` selector.
 export const unwrapNestedCodeWrappers: DomTransform = () => {
   return (document) => {
     for (const element of document.querySelectorAll('code, pre')) {

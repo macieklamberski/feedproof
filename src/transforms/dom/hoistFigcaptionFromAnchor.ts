@@ -1,10 +1,7 @@
 import type { DomTransform } from '../../types.js'
 
-// Some feeds wrap a figure's entire content in a single click-through anchor, so
-// the <figcaption> ends up inside the link alongside the media. That makes the
-// whole caption a click target and folds its text into the link's accessible
-// name. This moves the caption out to sit right after the anchor, still inside
-// the figure, leaving the click-through on the media alone.
+// A figure wrapped whole in a click-through anchor, so the <figcaption> is part of the link:
+// the whole caption is a click target and its text folds into the link's accessible name.
 export const hoistFigcaptionFromAnchor: DomTransform = () => {
   return (document) => {
     const figcaptions = document.querySelectorAll('figure > a > figcaption')

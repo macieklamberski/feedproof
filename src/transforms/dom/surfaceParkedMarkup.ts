@@ -1,15 +1,10 @@
 import type { DomTransform } from '../../types.js'
 import { isUrlShaped } from '../../utils/urls.js'
 
-// An address that names its own host: absolute, or protocol-relative and given its scheme by
-// `resolveRelativeUrls` below. A relative path is deliberately not matched, because this runs
-// over every attribute on every recovered element and `class`, `style` and the rest would read
-// as addresses.
+// Matching a relative path too would take `class` and `style` values for addresses.
 const statedUrlRegex = /^(?:https?:)?\/\//i
 
-// Whether the recovered markup names an address of its own, in any attribute. Anything the
-// downstream passes can resolve, link or placeholder is a URL in some attribute, and which
-// attribute it is differs per platform, so every one is read instead of a listed few.
+// Which attribute carries the embed's address differs per platform.
 const hasStatedUrl = (holder: Element): boolean => {
   for (const element of holder.querySelectorAll('*')) {
     for (const attribute of element.attributes) {
@@ -22,21 +17,10 @@ const hasStatedUrl = (holder: Element): boolean => {
   return false
 }
 
-// A lazy loader replaces every third-party embed with
-// `<div class="load-later" data-url data-content>` and rebuilds it on scroll. A reader runs no
-// JS, so the div renders nothing, and because it holds no text either, stripEmptyTags deletes it
-// and the embed reaches a reader as nothing at all.
-//
-// `data-content` is the complete original element, percent-encoded: the YouTube iframe with its
-// size and player parameters, the tweet blockquote with its text, author and date, the TikTok and
-// Instagram quotes with their captions. Decoding it restores exactly the markup each resolver and
-// each cite pass is already written against, so the container is dissolved into what it holds and
-// nothing here knows which platform that turns out to be.
-//
-// The decoded string still carries HTML entities in its attribute values, so it goes back through
-// the parser, not a regex.
+// A lazy loader's load-later div, which holds the embed percent-encoded and renders nothing itself.
 export const surfaceParkedMarkup: DomTransform = () => (document) => {
   for (const container of document.querySelectorAll('div.load-later[data-content]')) {
+    // `data-content` is the complete original element: the YouTube iframe or the tweet blockquote.
     const encoded = container.getAttribute('data-content')
 
     if (!encoded) {
@@ -52,6 +36,7 @@ export const surfaceParkedMarkup: DomTransform = () => (document) => {
     }
 
     const holder = document.createElement('div')
+    // The decoded string still carries HTML entities in its attribute values.
     holder.innerHTML = markup
 
     // The container states the embed's address as well as its markup. When the parked element was

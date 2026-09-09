@@ -1,8 +1,7 @@
 import type { DomTransform } from '../../types.js'
 import { isComment, isElement, isText, isWhitespaceText } from '../../utils/dom.js'
 
-// Some feeds emit each list item as its own one-item <ul>/<ol>. Merges runs
-// of consecutive sibling lists sharing tag and attribute set into the first.
+// A list shipped as one <ul> or <ol> per item, so an <ol> restarts at 1 on every line.
 export const mergeFragmentedLists: DomTransform = () => {
   return (document) => {
     const lists = document.querySelectorAll('ul, ol')
@@ -45,9 +44,7 @@ export const mergeFragmentedLists: DomTransform = () => {
 
       const target = run[0]
 
-      // Whitespace between fragments moves into the target so it keeps acting
-      // as a textContent boundary. Without it, the last item of one fragment
-      // would fuse with the first item of the next.
+      // Dropping the whitespace between fragments fuses the last item's text with the next.
       for (let index = 1; index < run.length; index++) {
         const extra = run[index]
         let between = target.nextSibling

@@ -3,36 +3,15 @@ import { attr, hasText } from '../../utils/dom.js'
 import { isUrlShaped } from '../../utils/urls.js'
 import { createIframe } from '../../utils/widgets.js'
 
-// note.com ships every embed as an empty <figure> that only its web client hydrates, naming the
-// target in `data-src`. Nothing renders it in a reader, so the embed is lost: the figure survives
-// `stripEmptyTags` because note.com writes a uuid into `name` and `id`, which means the loss is
-// silent in the output, not visible in it. Giving the url an <iframe> carrier is what puts
-// it back on the pipeline, where `convertWidgets` treats it like any other frame.
-//
-// The carrier is emitted on the strength of what note.com says the figure is, not on a guess
-// about whether a given host will frame. Any guess available here is the wrong one: a registry
-// lookup answers "does a resolver rewrite this url", which is not the same question as "does
-// this page frame", and the two disagree in both directions. `adventar.org` sends neither
-// `x-frame-options` nor a CSP and no resolver claims it, so a registry check would have degraded
-// a url that frames fine. Answering the real question needs a network round trip, which
-// `extract` may not do.
-//
-// `embedded-service` names the platform but is not read, only matched on. It is an unpublished
-// vocabulary note.com controls, spelled inconsistently (`githubRepository`, `tiktok-web`,
-// `note-qa`), and the same platform lands in different values depending on the url shape: an
-// Instagram post arrives as `oembed` and an Instagram reel as `external-article`. So the url is
-// the only honest signal, and it is passed on untouched.
-//
-// `data-src` is always a canonical page url, never a player. Those pages overwhelmingly refuse
-// framing (YouTube, X, TikTok, Instagram and stand.fm answer SAMEORIGIN or DENY, Spotify sends a
-// restrictive frame-ancestors), so a figure only reaches a reader as something watchable when a
-// resolver reads the page url off the carrier and mints the player url from it. That is what
-// `notecomIframeEmbedResolver` and the page-url branches of the twitter, tiktok and stand.fm
-// resolvers exist for, and this transform is what feeds them.
+// note.com ships each embed as an empty <figure> only its web client hydrates.
+// It names the target in data-src, and a uuid in name and id keeps stripEmptyTags off it.
 export const convertNoteEmbeds: DomTransform = () => (document) => {
+  // embedded-service is only matched on: the same platform lands in different values by url shape.
+  // An Instagram post arrives as oembed and an Instagram reel as external-article.
   for (const element of document.querySelectorAll('figure[embedded-service][data-src]')) {
     const source = attr(element, 'data-src')
 
+    // No resolver-registry check on the url: adventar.org frames fine and no resolver claims it.
     if (!source || !isUrlShaped(source)) {
       continue
     }
@@ -43,6 +22,9 @@ export const convertNoteEmbeds: DomTransform = () => (document) => {
       continue
     }
 
+    // data-src is always a canonical page url, never a player. YouTube, X, TikTok, Instagram and
+    // stand.fm answer SAMEORIGIN or DENY for theirs, so only a resolver minting the player url
+    // from the page url makes the figure watchable.
     const iframe = createIframe(document, source)
     element.replaceWith(iframe)
   }

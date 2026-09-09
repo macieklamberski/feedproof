@@ -4,9 +4,7 @@ import * as styles from '../../utils/styles.js'
 
 type Direction = 'center' | 'left' | 'right'
 
-// Media elements that can receive a resolved alignment. <picture> is intentionally
-// absent: it is climbed as a structural wrapper of its inner <img> and is dissolved
-// by flattenPictureElements, so the hook must land on the img, not the <picture>.
+// No <picture>: flattenPictureElements dissolves it, so a hook set there is lost.
 const mediaTags = new Set(['img', 'video', 'audio', 'iframe'])
 
 // Structural media wrappers, always treated as part of the media (no media-primary
@@ -27,19 +25,15 @@ const classDirections = new Map<string, Direction | 'none'>([
   ['alignnone', 'none'],
 ])
 
-// Deprecated `align` attribute: horizontal values only. `middle`/`top`/`bottom`
-// are vertical image alignment and must not map to a horizontal hook.
+// No middle, top or bottom: those are vertical and would become a horizontal hook.
 const attrDirections = new Map<string, Direction>([
   ['center', 'center'],
   ['left', 'left'],
   ['right', 'right'],
 ])
 
-// Bare directional classes. Honored on a media element or a media-primary wrapper
-// of it, never a standalone text block, where `center`/`left`/`right` unambiguously
-// mean "align this media" (e.g. <img class="center">, <div class="center"><img></div>).
-// resolve() only feeds getOwnDirection media-context elements, so the media-primary
-// gate already prevents reading these off layout containers.
+// Bare center, left and right classes align the media they sit on or wrap, as in
+// <img class="center"> and <div class="center"><img></div>.
 const bareClassDirections = new Map<string, Direction>([
   ['center', 'center'],
   ['left', 'left'],
@@ -48,11 +42,9 @@ const bareClassDirections = new Map<string, Direction>([
 
 const whitespaceRegex = /\s+/
 
-// Both horizontal margins set to auto, however the element spells them. The shorthand states
-// them by position: one value covers every side, two and three put the horizontal pair second,
-// and four gives the right and the left a value each. `10px auto` centers as surely as `0 auto`,
-// while `0 auto 10px 0` does not, since only one side is auto. A value holding a function is
-// left alone, because its own spaces would be counted as sides.
+// The margin shorthand covers every side with one value, puts the horizontal pair second with
+// two or three, and with four names the right second and the left fourth. A value holding a
+// function carries spaces of its own that would count as sides.
 const hasAutoHorizontalMargins = (element: Element): boolean => {
   if (
     styles.keyword(element, 'margin-left') === 'auto' &&
@@ -157,7 +149,7 @@ const isMediaPrimary = (wrapper: Element, inner: Element): boolean => {
 }
 
 type Resolution = {
-  target: Element // Where the hook lands: the wrapping <figure>, else the media.
+  target: Element // Where the hook lands: the wrapping <figure>, else the media
   direction: Direction
 }
 
@@ -195,16 +187,7 @@ const resolve = (media: Element): Resolution | undefined => {
   }
 }
 
-// Canonicalizes explicit media alignment (WordPress align* classes, deprecated align attribute,
-// <center>, inline text-align, image auto-margins) into a single data-align="center|left|right"
-// hook on the media (or its <figure>). Text alignment on prose is left untouched.
-//
-// Purely additive: it only attaches the hook and never mutates the existing markup, so native
-// rendering keeps working until a renderer adopts data-align. Idempotent too: a media element
-// already carrying data-align is skipped.
-//
-// Runs before flattenPictureElements and unwrapWrappers, so a signal on a soon-dissolved
-// <picture>/<div> lands on the surviving media.
+// Media aligned by WordPress classes, an align attribute, <center> or inline style a reader strips.
 export const canonicalizeAlignment: DomTransform = () => {
   return (document) => {
     for (const media of document.querySelectorAll('img, video, audio, iframe')) {

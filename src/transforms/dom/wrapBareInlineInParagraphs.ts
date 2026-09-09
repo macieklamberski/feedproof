@@ -8,8 +8,7 @@ import {
   mediaElements,
 } from '../../utils/dom.js'
 
-// One entry longer than the same-named list in convertBreaksToParagraphs: `figure` is here because
-// a figure's bare caption text needs a <p> to carry spacing and caption styling.
+// Not the list in convertBreaksToParagraphs: figure is here so a bare caption gets a <p>.
 const processContainersSelector =
   'body, div, blockquote, td, li, article, section, main, header, footer, aside, figure'
 
@@ -61,10 +60,8 @@ const dissolvingTags = new Set(['div', 'article', 'section', 'main', 'header', '
 // by unwrapWrappers) gets an element to carry caption spacing and styling.
 const alwaysWrapTags = new Set(['body', 'figure'])
 
-// Block-boundary analogue of convertBreaksToParagraphs: wraps bare inline runs in
-// <p> in place, leaving the wrapper for unwrapWrappers to hoist. Runs after
-// convertBreaksToParagraphs (so <br><br> splits are already blocks) and before the
-// strip passes (so the new <p>s' boundary <br>s get cleaned).
+// Bare inline runs beside block siblings in a container, which render with no paragraph spacing,
+// and every run in a wrapper unwrapWrappers dissolves, whose text would otherwise land bare.
 export const wrapBareInlineInParagraphs: DomTransform = () => {
   return (document) => {
     for (const container of document.querySelectorAll(processContainersSelector)) {

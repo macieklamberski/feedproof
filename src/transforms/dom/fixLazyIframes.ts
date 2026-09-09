@@ -4,20 +4,14 @@ import { isUrlShaped, isUsableSrc } from '../../utils/urls.js'
 
 // Blank pages a platform points a deferred iframe's src at while the real URL sits in a
 // lazy attribute: a src matching one of these is a placeholder, not content.
+// Invision Community pairs its page with data-embed-src, Complianz its video with data-src-cmplz.
 const placeholderPageRegexes = [
-  // Invision Community, paired with data-embed-src. Older boards park the frame on the
-  // interface's spacer image instead of its blank page.
+  // Invision Community's blank page or spacer image.
   /\/applications\/core\/interface\/(?:index\.html|js\/spacer\.png)(?:[?#]|$)/,
-  /\/complianz-gdpr(?:-premium)?\/assets\/video\//, // Complianz placeholder video, paired with data-src-cmplz.
+  /\/complianz-gdpr(?:-premium)?\/assets\/video\//, // Complianz's placeholder video
 ]
 
-// Promote a lazy/consent-gated iframe src (the real embed URL parked in a data-*
-// attribute) into `src` when the src itself is empty or `about:blank`, so the
-// downstream embed transform sees a resolvable iframe.
-//
-// The promoted value is resolved on the way, since resolveRelativeUrls has already run over
-// `src` by now and a parked url skipped it: a protocol-relative one would otherwise reach the
-// resolvers without a host and fall through to the generic placeholder.
+// An iframe whose src is blank or a placeholder page, the real url parked in a lazy attribute.
 export const fixLazyIframes: DomTransform = (context) => {
   const { lazyIframeAttributes, baseUrl, resolveUrlFn } = context
 
@@ -33,6 +27,7 @@ export const fixLazyIframes: DomTransform = (context) => {
         const value = iframe.getAttribute(attribute)
 
         if (value && isUrlShaped(value)) {
+          // resolveRelativeUrls already ran, so a protocol-relative value resolves here or never.
           iframe.setAttribute('src', resolveUrlFn(value, baseUrl) ?? value)
           break
         }

@@ -1,11 +1,10 @@
 import type { DomTransform } from '../../types.js'
 import { hasAncestorWithTagName, NodeFilter } from '../../utils/dom.js'
 
+// A comment inside <pre> or <code> is part of the example it sits in.
 const codeBlockTags = new Set(['pre', 'code'])
 
-// Removes HTML comments from feed content. Preserves comments inside <pre> and
-// <code> blocks since those usually contain tutorial markup where the comment
-// is part of the example.
+// An HTML comment is editor residue that renders nothing and only bloats the item.
 export const stripComments: DomTransform = () => {
   return (document) => {
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_COMMENT)

@@ -3,17 +3,14 @@ import type { DomTransform } from '../../types.js'
 import { jsonAttr } from '../../utils/dom.js'
 import { isUrlShaped } from '../../utils/urls.js'
 
-// Substack ships an inline @-mention as an empty <span class="mention-wrap"> whose person
-// or publication lives only in the data-attrs JSON, so the name vanishes mid-sentence in a
-// reader. Rebuild the anchor: a publication mention carries its url in the payload, a user
-// mention carries url: null and its numeric id mints a profile url that Substack redirects
-// to the canonical handle.
 type MentionAttrs = {
   name?: string
   id?: number
   url?: string | null
 }
 
+// Substack ships an @-mention as an empty span whose name lives only in its data-attrs JSON.
+// A user mention carries url: null, and the profile url its id mints redirects to the handle.
 export const fixSubstackMentions: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll('span.mention-wrap')) {
     const attrs = jsonAttr<MentionAttrs>(element, 'data-attrs')

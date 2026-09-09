@@ -13,29 +13,19 @@ type EmbedSource = {
   compose: (id: string, params: Record<string, string>) => string
 }
 
-// lite-youtube / lite-vimeo (and their forks) are JS web components that hold the video
-// id in a `videoid` attribute and build the real iframe on click. A reader runs no JS,
-// so the video never appears. Each entry maps the custom tag to the embed URL built
-// from the id, applying the `start` offset the way that platform's player expects.
-//
-// Each entry states the parameters its own player understands, so a facade's `params` is
-// filtered against that platform, not against whichever one happens to be first. Vimeo's
-// player takes the offset as a `#t=` fragment and reads nothing else, so a name YouTube allows
-// and Vimeo does not is dropped either way today.
 const embedSources: Record<string, EmbedSource> = {
   'lite-youtube': {
     params: youtubeEmbedParams,
     compose: (id, params) => composeYoutubeUrl(id, params),
   },
+  // Vimeo's player takes the offset as a #t= fragment and reads nothing else.
   'lite-vimeo': {
     params: ['start'],
     compose: (id, params) => composeVimeoUrl(id, undefined, params.start),
   },
 }
 
-// Rebuilds a plain <iframe> from a lite-youtube / lite-vimeo custom element so the later
-// convertWidgets turns it into a placeholder, which both providers now have a resolver for.
-// Carries over the `start` offset, the whitelisted half of `params`, and `videotitle`.
+// lite-youtube and lite-vimeo are web components that only build their iframe with JS on click.
 export const rebuildLiteVideoEmbeds: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll('lite-youtube[videoid], lite-vimeo[videoid]')) {
     const source = embedSources[element.localName]

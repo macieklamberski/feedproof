@@ -27,12 +27,8 @@ const preserveWhenEmpty = new Set([
   'wbr',
 ])
 
-// Removes elements with no non-whitespace text and no element children. A
-// whitespace-only block (e.g. a `<div>&nbsp;</div>` spacer) is removed. A
-// whitespace-only inline element is unwrapped to its own whitespace, so a word
-// boundary survives in normal flow (the browser collapses it) while significant
-// indentation inside <pre> (e.g. a Pygments `<span class="w">    </span>` token)
-// is preserved. Reverse iteration handles nested empties in one pass.
+// An empty element is a spacer or a leftover wrapper that renders as a blank gap.
+// A spacer ships as `<div>&nbsp;</div>`.
 export const stripEmptyTags: DomTransform = () => {
   return (document) => {
     const all = document.body.querySelectorAll('*')
@@ -61,10 +57,7 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
-      // Empty elements carrying an id or name are in-page anchor / ARIA targets
-      // (`<a name="x">`, `<span id="x">`, …). Other content links to them via
-      // `#fragment` or `aria-*`. Removing them breaks that navigation, so keep
-      // them even when empty.
+      // Removing an empty element with an id or name breaks the #fragment and aria-* links to it.
       if (element.hasAttribute('id') || element.hasAttribute('name')) {
         continue
       }
@@ -95,6 +88,8 @@ export const stripEmptyTags: DomTransform = () => {
         continue
       }
 
+      // Removing a whitespace-only inline element eats a word boundary or a Pygments indent.
+      // Pygments ships indentation inside <pre> as a whitespace-only `<span class="w">` token.
       if (childCount === 0 || isBlockElement(element)) {
         element.remove()
       } else {

@@ -13,11 +13,7 @@ const boldTags = new Set(['b', 'strong'])
 
 const mediaSelector = [...mediaElements].join(', ')
 
-// Whitespace, comments, and inline elements holding neither text nor media: the nodes
-// stripEmptyTags later removes. Judging the heading against them keeps the unwrap aligned with
-// the final content. Counting them instead would let a whitespace-only anchor beside the bold
-// block the unwrap here, only for stripEmptyTags to delete that anchor and leave the unwrap to a
-// second run.
+// A whitespace-only anchor beside the bold is gone by stripEmptyTags, so it must not block this.
 const isIgnorableNode = (node: Node): boolean => {
   if (isWhitespaceText(node) || isComment(node)) {
     return true
@@ -46,9 +42,7 @@ const soleContentElement = (heading: Element): Element | null => {
   return found
 }
 
-// Unwraps a <b>/<strong> that wraps a heading's entire content. Headings are
-// already bold via styling, so the inner bold is redundant. Stacked wrappers
-// collapse in a single pass.
+// A <b> or <strong> wrapping a heading's whole content, which headings already render bold.
 export const unwrapHeadingBold: DomTransform = () => {
   return (document) => {
     const headings = document.querySelectorAll(headingSelector)

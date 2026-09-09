@@ -10,23 +10,19 @@ import { enclosureMarker } from './injectEnclosures.js'
 // watch/embed/short URLs, so the poster side needs its own match.
 const thumbnailIdPattern = /\/vi\/([a-zA-Z0-9_-]{11})\//
 
-// Markers in an iframe/embed src that mean a video player, used to spot a video-led
-// item whose image enclosure is really the video's poster. A host list is needed
-// because players without a feedsweep resolver (e.g. JW Player) carry no
-// data-embed-provider. Each host is a plain substring with its own note, escaped and joined
-// into one matcher.
+// A player without a resolver, like JW Player, carries no data-embed-provider to match on.
 const videoHostFragments = [
-  'youtube.com', // YouTube.
-  'youtu.be', // YouTube share links.
-  'player.vimeo.com', // Vimeo player.
-  'vimeo.com/video', // Vimeo video path.
-  'jwplayer', // JW Player (cdn.jwplayer.com).
-  'dailymotion.com', // Dailymotion.
-  'wistia', // Wistia (fast.wistia.net/.com).
-  'videopress.com', // VideoPress (WordPress.com).
-  'brightcove', // Brightcove.
-  'streamable.com', // Streamable.
-  'v.redd.it', // Reddit-hosted video.
+  'youtube.com', // YouTube
+  'youtu.be', // YouTube share links
+  'player.vimeo.com', // Vimeo player
+  'vimeo.com/video', // Vimeo video path
+  'jwplayer', // JW Player (cdn.jwplayer.com)
+  'dailymotion.com', // Dailymotion
+  'wistia', // Wistia (fast.wistia.net/.com)
+  'videopress.com', // VideoPress (WordPress.com)
+  'brightcove', // Brightcove
+  'streamable.com', // Streamable
+  'v.redd.it', // Reddit-hosted video
 ]
 const videoHostPattern = new RegExp(videoHostFragments.map(escapeRegex).join('|'), 'i')
 
@@ -96,11 +92,8 @@ const moveImageToVideoPoster = (image: Element, video: Element, overwrite = fals
   removeWithEmptyWrappers(image)
 }
 
-// Some feeds carry a video's poster image as well as the video: a YouTube
-// thumbnail next to its embed (WordPress lazy-embed plugins), or an image
-// enclosure on an item whose body is just a video. The standalone image is
-// redundant, so move it onto the video as its poster (filling an embed that has no
-// thumbnail of its own) and remove it.
+// A video's poster shipped as a second image: a thumbnail beside its embed, or an image enclosure.
+// WordPress lazy-embed plugins ship the YouTube thumbnail beside the embed.
 export const assignVideoPosters: DomTransform = () => (document) => {
   // (A) An inline image whose URL is a thumbnail of an embedded video, matched by id.
   const embedsByVideoId = collectEmbedsByVideoId(document)
@@ -112,9 +105,7 @@ export const assignVideoPosters: DomTransform = () => (document) => {
         continue
       }
 
-      // The image is the publisher's own poster for this exact video, so it wins over a
-      // resolver thumbnail (only ever a guess composed from the video id). A feed-defined
-      // thumbnail on an enclosure embed stays authoritative, so don't overwrite that one.
+      // Only a feed-defined enclosure thumbnail outranks the inline image, not a resolver's guess.
       const isFeedDefined = embed.hasAttribute(enclosureMarker)
       moveImageToVideoPoster(image, embed, !isFeedDefined)
     }

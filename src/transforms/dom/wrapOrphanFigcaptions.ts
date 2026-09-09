@@ -38,17 +38,14 @@ const precedingFigures = (anchor: Element): Array<Element> => {
   return figures
 }
 
-// The caption is moved out of the wrapper it came in, and stripEmptyTags has already run by
-// this point, so an emptied wrapper would be left behind for good.
+// stripEmptyTags has already run, so an emptied wrapper would stay for good.
 const discardEmptyAnchor = (anchor: Element, figcaption: Element): void => {
   if (anchor !== figcaption && !anchor.textContent?.trim() && anchor.children.length === 0) {
     anchor.remove()
   }
 }
 
-// A caption can end up with nothing tying it to its images two ways: the feed publishes an
-// image block and a bare <figcaption> with no <figure> at all, or it gives several images one
-// shared caption, which then has to sit outside every figure it belongs to.
+// A bare <figcaption> with no <figure>, or one shared by several figures and sitting outside them.
 export const wrapOrphanFigcaptions: DomTransform = () => {
   return (document) => {
     const figcaptions = Array.from(document.querySelectorAll('figcaption'))

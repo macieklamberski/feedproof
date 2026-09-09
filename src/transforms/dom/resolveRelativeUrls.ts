@@ -25,8 +25,6 @@ const resolveAttribute = (
   }
 }
 
-// Rewritten even when no url needed resolving: `parseSrcset` drops malformed descriptor-only
-// candidates, and the rewrite is what keeps those out of the attribute.
 const resolveSrcset = (
   element: Element,
   baseUrl: string | undefined,
@@ -62,9 +60,8 @@ type UrlAttribute = {
   srcset?: boolean
 }
 
-// `src` matches any element, not a list of tags: widget resolvers claim `script[src*="…"]`
-// carriers. The anchor keeps fragment-only hrefs so in-article links still scroll; a `cite` names
-// nothing to scroll to, so it takes no such exception.
+// Narrowing [src] to a tag list leaves the script carriers widget resolvers read unresolved.
+// Absolutising a fragment-only href breaks in-article scrolling: a cite names no scroll target.
 const urlAttributes: Array<UrlAttribute> = [
   { selector: '[src]', attribute: 'src' },
   { selector: 'a[href]:not([href^="#"])', attribute: 'href' },
@@ -75,11 +72,9 @@ const urlAttributes: Array<UrlAttribute> = [
   { selector: 'img[srcset], source[srcset]', attribute: 'srcset', srcset: true },
 ]
 
-// Runs without a `baseUrl` too. A protocol-relative url needs a scheme, not a base, and
-// `resolveUrlFn` supplies one, so those are absolutised for every caller. Anything genuinely
-// relative resolves to nothing without a base and is left as it stands, which is what the
-// `if (resolved)` guard in `resolveAttribute` expresses.
+// A relative or protocol-relative url points nowhere once the content leaves its page.
 export const resolveRelativeUrls: DomTransform = ({ baseUrl, resolveUrlFn }) => {
+  // Bailing out without a baseUrl leaves protocol-relative urls without a scheme.
   return (document) => {
     for (const { selector, attribute, srcset } of urlAttributes) {
       for (const element of document.querySelectorAll(selector)) {

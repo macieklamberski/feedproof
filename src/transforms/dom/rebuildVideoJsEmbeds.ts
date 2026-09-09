@@ -8,11 +8,7 @@ type SetupConfig = {
   poster?: string
 }
 
-// The file sits either in a `<source>` child or in the
-// `sources` array of the `data-setup` json Video.js reads. Only a file a `<video>` can actually
-// play counts: a stream manifest needs the javascript player to fetch and stitch its segments,
-// so a native element pointed at one shows an empty box everywhere except Safari.
-// `videoFileRegex` draws that line already, so nothing here has to detect "live".
+// A stream manifest as the src leaves a native <video> an empty box everywhere but Safari.
 const buildVideo = (document: Document, element: Element): Element | undefined => {
   const setup = jsonAttr<SetupConfig>(element, 'data-setup')
   const child = Array.from(element.querySelectorAll('source'))
@@ -31,14 +27,8 @@ const buildVideo = (document: Document, element: Element): Element | undefined =
   })
 }
 
-// `<video-js>` is a custom element, so it renders as nothing at all until the Video.js script
-// upgrades it. Video.js is a renderer and nothing more: it plays whatever the markup hands it,
-// so this rebuilds the element from what the library itself defines, a `<source>` child or a
-// `data-setup`, and knows about no platform in particular.
-//
-// An element naming no file is left alone. Either its url exists only in javascript, or the
-// element stands for someone's hosted player and the id means something only that platform can
-// read, which is a job for that platform's resolver.
+// <video-js> is a custom element that renders as nothing until the Video.js script upgrades it.
+// Video.js plays whatever the markup hands it, a <source> child or the sources in data-setup JSON.
 export const rebuildVideoJsEmbeds: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll('video-js')) {
     const video = buildVideo(document, element)

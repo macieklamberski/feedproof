@@ -1,10 +1,6 @@
 import type { DomTransform } from '../../types.js'
 
-// When feed content contains an <h1>, the article body's heading hierarchy collides with the
-// reader's own page-level <h1> (article title). Shift every heading down by one level (h1→h2,
-// h2→h3, … , h5→h6) so the body sits below the reader chrome. Bodies that already start at <h2>
-// are left alone. <h6> stays as <h6> (no level seven to demote into; collisions with the
-// demoted-from-<h5> are accepted as harmless).
+// A body starting at <h1>, which collides with the reader's own page-level title heading.
 export const demoteHeadings: DomTransform = () => {
   return (document) => {
     if (!document.querySelector('h1')) {

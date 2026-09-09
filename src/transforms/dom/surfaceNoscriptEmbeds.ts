@@ -15,18 +15,13 @@ const isResolvedIframe = async (
   return false
 }
 
-// Lazy-load plugins (WP Rocket LazyLoad, a3 Lazy Load, and similar) wrap the original
-// video <iframe> in a <noscript> as the no-JS fallback. A reader runs no JS, but the
-// browser still hides <noscript> content (and sanitizers strip it), so the embed never
-// renders. Hoist the content out when the noscript holds an iframe a resolver claims.
-//
-// The resolver gate is essential: <noscript><iframe> is also how Google Tag Manager,
-// reCAPTCHA, and ad networks ship their fallbacks, and those must never be surfaced
-// into content. Gating on the widget resolvers excludes them.
+// A lazy-load plugin's <noscript> fallback iframe, which a reader hides along with the noscript.
+// WP Rocket LazyLoad and a3 Lazy Load wrap the original video <iframe> this way.
 export const surfaceNoscriptEmbeds: DomTransform = (context) => async (document) => {
   for (const noscript of document.querySelectorAll('noscript')) {
     const iframe = noscript.querySelector('iframe[src]')
 
+    // Ungated, this would surface Google Tag Manager, reCAPTCHA and ad-network noscript frames.
     if (!iframe || !(await isResolvedIframe(iframe, context.widgetResolvers))) {
       continue
     }

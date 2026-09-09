@@ -1,11 +1,11 @@
 import type { DomTransform } from '../../types.js'
 
-// Inside <pre>, whitespace is preserved so <br> is redundant. Walks the DOM
-// (not innerHTML) so raw-text entities in <pre><code> samples aren't mangled.
+// A <br> inside <pre> doubles the line break the preserved whitespace already renders.
 export const replacePreLineBreaks: DomTransform = () => {
   return (document) => {
     const pres = document.querySelectorAll('pre')
 
+    // Rewriting innerHTML instead mangles the entities in a <pre><code> sample.
     for (const pre of pres) {
       for (const br of pre.querySelectorAll('br')) {
         const parent = br.parentNode

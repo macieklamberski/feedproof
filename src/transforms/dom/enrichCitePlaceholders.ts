@@ -5,6 +5,7 @@ import {
   updateCitePlaceholder,
 } from '../../utils/widgets.js'
 
+// A cite placeholder carrying only the provider and url the feed markup gave it.
 export const enrichCitePlaceholders: DomTransform = (context) => {
   const { enrichCiteFn } = context
 
@@ -19,9 +20,7 @@ export const enrichCitePlaceholders: DomTransform = (context) => {
       url: element.getAttribute('data-cite-url') ?? '',
     }),
     enrichCiteFn,
-    // A payload arrives from a platform's API rather than from the feed, and it overwrites what
-    // the resolver read, so its urls go through the same preparation as a resolver's: resolved
-    // against the base, the canonical one cleaned.
+    // The payload's urls arrive from the platform API unresolved and uncleaned.
     (element, data) => {
       updateCitePlaceholder(element, prepareCiteMetadata(data, context))
     },

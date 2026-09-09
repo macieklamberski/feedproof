@@ -7,15 +7,12 @@ import { createIframe } from '../../utils/widgets.js'
 const wistiaIdPattern = /\bwistia_async_([A-Za-z0-9]+)/
 
 // The facade states its kind in a second class token beside the id. A channel is its own player,
-// so building the media route from a channel id yields a url that names no media. The token is
-// read here rather than through `playerRoutes`, which maps url segments and not class names.
+// so the media route built from a channel id names no media.
 const channelFacadePattern = /\bwistia_channel\b/
 
-// Three carriers, one player. The `wistia_async_{id}` div is the JS-API inline embed, the
-// `<wistia-player media-id>` custom element is Wistia's current form, and a bare
-// `<script src=".../embed/medias/{id}.jsonp">` is what remains when a feed keeps the loader
-// but drops the div. None of them renders anything without JS. A real `<iframe>` is matched
-// too, not to rebuild it but so a loader script beside it does not mint a second player.
+// The wistia_async_{id} div is the JS-API inline embed and <wistia-player media-id> the current
+// form. A bare medias/{id}.jsonp script remains when a feed keeps the loader but drops the div.
+// Dropping the iframe arm lets a loader script beside a real iframe mint a second player.
 const wistiaSelector = [
   '[class*="wistia_async_"]',
   'wistia-player[media-id]',
@@ -39,14 +36,8 @@ const readMediaId = (element: Element): string | undefined => {
   return element.className.match(wistiaIdPattern)?.[1]
 }
 
-// Rebuilding a plain <iframe> from the id makes the embed render, and `wistiaEmbedResolver` then
-// reads that same url and gives it a provider and an id. No thumbnail either way, since Wistia's
-// poster needs the media JSON hop. The custom element's `aspect` is a bare decimal, so the ratio
-// survives into the rebuilt iframe.
-//
-// A lone `<script>` is rebuilt only when nothing else on the page already names that media.
-// Where a feed ships the loader beside the facade div (the common case), the div is the better
-// carrier and the script would otherwise mint a duplicate player.
+// Wistia's async div, <wistia-player> element and loader script all render nothing without JS.
+// Wistia's poster needs the media JSON hop, so none of them states a thumbnail.
 export const rebuildWistiaEmbeds: DomTransform = () => (document) => {
   const elements = Array.from(document.querySelectorAll(wistiaSelector))
 
@@ -77,6 +68,7 @@ export const rebuildWistiaEmbeds: DomTransform = () => (document) => {
     const route = channelFacadePattern.test(element.className ?? '') ? 'channel' : 'iframe'
     const iframe = createIframe(document, composeEmbedUrl(route, mediaId))
 
+    // The custom element's aspect is a bare decimal.
     const ratio = parseRatio(attr(element, 'aspect') ?? '')
 
     // Written as the CSS property it is, not as width and height attributes: the facade states

@@ -13,10 +13,8 @@ const isCaptionText = (element: Element): boolean => {
   return Boolean(element.textContent?.trim())
 }
 
-// A figcaption nested in a wrapper beside text-only blocks means the wrapper is the whole
-// caption: Big Think writes the image description in site-classed divs with only the credit
-// line in the figcaption, so stripped of classes the description reads as body prose. Runs
-// before unwrapWrappers, which dissolves the wrapper and with it the grouping evidence.
+// Big Think puts the image description in divs beside a <figcaption> that holds only the credit,
+// so stripped of its classes the description reads as body prose.
 export const mergeWrappedCaptionText: DomTransform = () => {
   return (document) => {
     for (const figcaption of document.querySelectorAll('figcaption')) {

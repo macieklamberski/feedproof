@@ -9,32 +9,27 @@ const supTags = new Set(['sup'])
 // (Sphinx/MkDocs, markdown-it-anchor, Docusaurus, AnchorJS, Zola). Presence of
 // any of these marks the anchor as a permalink on its own.
 const permalinkClasses = new Set([
-  'headerlink', // Sphinx / Python-Markdown / MkDocs.
-  'header-anchor', // markdown-it-anchor (VuePress / VitePress / Eleventy).
-  'heading-anchor', // Various themes.
-  'heading-link', // Various themes.
-  'heading-mark', // Hexo and similar Markdown themes.
-  'hash-link', // Docusaurus.
-  'anchorjs-link', // AnchorJS.
-  'zola-anchor', // Zola.
-  'o-heading-link', // Eleventy themes.
-  'wiki-anchor', // Redmine.
-  'permalink', // Generic permalink markup.
+  'headerlink', // Sphinx / Python-Markdown / MkDocs
+  'header-anchor', // markdown-it-anchor (VuePress / VitePress / Eleventy)
+  'heading-anchor', // Various themes
+  'heading-link', // Various themes
+  'heading-mark', // Hexo and similar Markdown themes
+  'hash-link', // Docusaurus
+  'anchorjs-link', // AnchorJS
+  'zola-anchor', // Zola
+  'o-heading-link', // Eleventy themes
+  'wiki-anchor', // Redmine
+  'permalink', // Generic permalink markup
 ])
 
-// Decorative permalink markers: a run of one or more glyph characters: hash (so
-// "#"/"##"/"###" by heading level), pilcrow, section sign, fleuron, link emoji, or
-// zero-width space. An anchor whose visible content is only these (or empty) is a
-// permalink, not real link text.
+// Hash, pilcrow, section sign, fleuron, link emoji or zero-width space.
 const permalinkLabelRegex = /^[#¶§❡\u{1f517}​]+$/u
 const footnoteClassRegex = /footnote/i
 const bracketedNumberRegex = /^\[\d+\]$/
 const whitespaceRegex = /\s+/
 
-// Accordion / collapse / tab controls (WPBakery, jQuery UI, Bootstrap, …) wrap
-// the heading in an `<a href="#panel">` whose fragment is the slugified title,
-// so it slug-matches a permalink, but it's an interactive toggle. Detected by
-// the control's class (on the anchor or heading) or its ARIA / toggle attributes.
+// Accordion, collapse and tab controls (WPBakery, jQuery UI, Bootstrap) wrap the heading in an
+// <a href="#panel"> whose fragment is the slugified title, so it slug-matches a permalink.
 const interactiveClassRegex = /accordion|collaps|toggl|panel-title|panel-heading|tta-panel/i
 const interactiveAttrRegex = /toggle|accordion|collapse/i
 
@@ -57,13 +52,7 @@ const slugify = (value: string): string => {
     .replace(/^-+|-+$/g, '')
 }
 
-// Headings carry in-page permalinks ("anchors") in many shapes: the whole heading wrapped in a
-// `#fragment` link, a trailing `#`/`¶` glyph, a generator's empty `headerlink`/`hash-link`
-// anchor, a bare `<a name>`/`<a id>` scroll target, a plain `id` on the heading itself, and so
-// on. This collapses every shape to one: plain heading text plus a single empty,
-// self-referential anchor (`<a id="fragment" href="#fragment">`) as the heading's first child.
-// The fragment rides on the anchor's `id` (the scroll target), so the reader can paint a
-// clickable permalink glyph (e.g. `::before { content: '#' }`) without any script.
+// A heading permalink shipped as a wrapping #fragment link, a stray glyph or a bare <a name>.
 export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn }) => {
   return (document) => {
     const headings = document.querySelectorAll(headingSelector)
@@ -153,10 +142,6 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
           continue
         }
 
-        // A decorative permalink: a glyph, or a marker sitting beside the real heading
-        // text (e.g. a labelled `permalink`/`heading-link` anchor): is removed whole. An
-        // anchor that wraps the entire heading keeps its text by promoting it out (inline
-        // glyph markers dropped) before the now-empty anchor goes.
         const wrapsHeading = (heading.textContent ?? '').trim() === visible
 
         if (!isSymbolOnly && wrapsHeading) {
@@ -192,8 +177,8 @@ export const normalizeAnchoredHeadings: DomTransform = ({ baseUrl, resolveUrlFn 
         permalinkFragment = headingId
       }
 
-      // The id rides on the anchor, not the heading, so the empty anchor survives
-      // empty-element stripping without creating a duplicate target.
+      // The id is what keeps the empty anchor from being stripped later as empty, and left on
+      // the heading too it would be a duplicate target.
       if (heading.getAttribute('id') === permalinkFragment) {
         heading.removeAttribute('id')
       }

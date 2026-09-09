@@ -1,6 +1,7 @@
 import type { DomTransform } from '../../types.js'
 import { createCitePlaceholder, prepareCiteMetadata } from '../../utils/widgets.js'
 
+// Quote and link cards a cite resolver claims, shipped as the platform's own card markup.
 export const convertCiteCards: DomTransform = (context) => {
   const citeResolvers = context.widgetResolvers.filter((resolver) => resolver.kind === 'cite')
 
@@ -13,10 +14,7 @@ export const convertCiteCards: DomTransform = (context) => {
           continue
         }
 
-        // Spread back over the resolver's own result because preparation is typed for the
-        // enricher's payload, where every field is optional, while a placeholder is built from a
-        // card that states a url. Nothing prepared is lost: a field it fills wins over the same
-        // field underneath.
+        // Prepared alone types every field optional and loses the url the placeholder needs.
         const prepared = { ...result, ...prepareCiteMetadata(result, context) }
 
         element.replaceWith(createCitePlaceholder(document, prepared))

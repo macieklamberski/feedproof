@@ -7,10 +7,6 @@ import type { DomTransform } from '../../types.js'
 import { jsonAttr } from '../../utils/dom.js'
 import { createIframe } from '../../utils/widgets.js'
 
-// The Elementor video widget defers its player for the embed sources: the real url lives only in
-// the widget's `data-settings` JSON and the `.elementor-video` div is left empty for JS to fill
-// at runtime, so in a reader the video never appears. The self-hosted source is missing here
-// because it is rendered server-side as a real `<video>` and already works.
 const iframeSources = toMap({
   youtube: readYoutubeEmbedSrc,
   vimeo: readVimeoEmbedSrc,
@@ -18,10 +14,8 @@ const iframeSources = toMap({
   videopress: readVideopressEmbedSrc,
 })
 
-// Rebuilds a real <iframe> from an Elementor video widget that defers a YouTube, Vimeo,
-// Dailymotion, or VideoPress embed, so the later convertWidgets turns it into a placeholder
-// (YouTube and Dailymotion gain a thumbnail; Vimeo and VideoPress stay posterless). Malformed
-// `data-settings` or an unrecoverable id skips the widget instead of throwing.
+// Elementor's video widget ships an empty player div with the url only in a settings JSON.
+// A self-hosted source ships server-side as a real <video>, so only the embed sources are read.
 export const rebuildElementorVideoEmbeds: DomTransform = () => (document) => {
   for (const widget of document.querySelectorAll('.elementor-widget-video[data-settings]')) {
     // The attribute reads back as decoded JSON, since the parser unescapes the entities.
@@ -60,8 +54,7 @@ export const rebuildElementorVideoEmbeds: DomTransform = () => (document) => {
       widget.appendChild(iframe)
     }
 
-    // The settings are consumed so a repeat run doesn't match the rebuilt widget and
-    // stack a second iframe next to the first.
+    // Left in place, the settings match again on a repeat run and stack a second iframe.
     widget.removeAttribute('data-settings')
   }
 }

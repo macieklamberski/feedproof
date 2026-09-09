@@ -25,18 +25,10 @@ const pickRemovableIndex = (firstSrc: string, secondSrc: string): number => {
   return 0
 }
 
-// Removes a leading image the body repeats right after it. WordPress feed plugins prepend
-// the post's featured image to the content, and when the author already opens the post with
-// that photo the reader shows it twice in a row. The shape is cross-platform (phpBB,
-// EC-CUBE, Hexo, WordPress, Drupal all produce it), so the match is positional: the first
-// two images in document order share a fingerprint, not a class or a generator.
-//
-// Only the adjacent repeat is touched. An image repeated deeper in the body can be
-// deliberate (a photo shown at the top and again beside its discussion), so anything past
-// the second position stays.
+// A feed that prepends the featured image shows it twice when the post already opens with it.
+// WordPress feed plugins prepend it, and phpBB, EC-CUBE, Hexo and Drupal produce the same pair.
 export const stripDuplicateLeadingImages: DomTransform = (context) => (document) => {
-  // Re-query after each removal so a run of three or more identical leading images
-  // collapses to one in a single pass, which also keeps the transform idempotent.
+  // A single query leaves two of a run of three identical leading images.
   while (true) {
     const images = document.querySelectorAll('img[src]')
 
@@ -44,6 +36,7 @@ export const stripDuplicateLeadingImages: DomTransform = (context) => (document)
       return
     }
 
+    // Widening past the second image deletes a photo the author repeats beside its discussion.
     const firstSrc = images[0].getAttribute('src') ?? ''
     const secondSrc = images[1].getAttribute('src') ?? ''
     const firstKey = getImageFingerprint(firstSrc, context.cleanUrlFn)

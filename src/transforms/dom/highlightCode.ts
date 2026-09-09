@@ -1,10 +1,6 @@
 import { toMap } from 'trousse'
 import type { DomTransform } from '../../types.js'
 import { hasAncestorWithTagName, isElement, isText, text, walkElements } from '../../utils/dom.js'
-// Token -> display-label map for the languages feedsweep recognizes (canonical
-// names plus common aliases). Read from here so detecting and labelling a code
-// block needs no highlight.js import: the only place that touches hljs is the
-// highlighter itself. Hand-maintained: add a token when adding a grammar.
 import labels from './highlightCode.json' with { type: 'json' }
 
 // The languages feedsweep recognizes, keyed by token (and alias). Used both to
@@ -15,6 +11,7 @@ const isSupportedLanguage = (token: string): boolean => {
   return supportedLabels.has(token.toLowerCase())
 }
 
+// Prism, highlight.js, Ghost, Hugo Chroma, Rouge and most Markdown renderers write language-X.
 const languageRegex = /(?:language|lang)-(\S+)/
 // data-language/-lang cover most editors and renderers. data-enlighter-language is
 // EnlighterJS (WordPress). EnlighterJS's "generic" value maps to no grammar, so such
@@ -35,27 +32,10 @@ const filenameRegex = /^\S+\.(\w+)$/
 // GitHub/Linguist wrapper class: highlight-source-LANG / highlight-text-LANG (the
 // source-/text- prefix is signal enough to trust a one-letter LANG like -c).
 const githubLanguageRegex = /^highlight-(?:source|text)-([a-z0-9+#]+)/
-// Sphinx/RST wrapper class: bare highlight-LANG. Require 2+ chars so one-letter
-// classes (highlight-c, highlight-r) that are really CSS utilities don't match.
+// A one-letter highlight-c or highlight-r is a CSS utility class, not a language.
 const sphinxLanguageRegex = /^highlight-([a-z][a-z0-9+#]+)$/
 
-// Catalog of the code-highlighter / platform conventions detectLanguage recognizes
-// (prevalences measured against the real-feed corpus). In priority order it reads:
-//   1. language-X / lang-X class on <code>/<pre>, or on a wrapping ancestor: Prism,
-//      highlight.js, Ghost, Hugo Chroma, Jekyll/Rouge, and most Markdown renderers
-//      (by far the most common).
-//   2. data-language / data-lang: Shiki, Astro, Hugo Chroma, Discourse, Docusaurus;
-//      data-enlighter-language: EnlighterJS (WordPress).
-//   3. class="sourceCode LANG": Pandoc.
-//   4. class="brush: LANG", SyntaxHighlighter Evolved (WordPress).
-//   5. class="lang:LANG" / lang_LANG, Crayon (WordPress).
-//   6. <figure><figcaption>file.ext</figcaption> filename: Expressive Code (Astro).
-//   7. class="highlight LANG" (LANG resolving to a grammar): Forem/dev.to, Pygments.
-//   8. highlight-source-LANG / highlight-LANG wrapper class: GitHub/Linguist, Sphinx.
-//   9. A standalone class that is itself a grammar name (3+ chars): class="haskell";
-//      older/hand-rolled templates with no prefix or wrapper token.
-// A block with no language hint stays plain: no relevance-based or shape-based
-// guessing, which mostly guesses wrong on short feed snippets.
+// The language a code block declares, in whichever highlighter or platform convention.
 export const detectLanguage = (pre: Element | null, code: Element | null): string | undefined => {
   // Check language-* / lang-* class on <code>, then <pre>, then the pre's
   // wrapping ancestors: Jekyll/Rouge puts the class on an outer div:
@@ -137,10 +117,8 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
     }
   }
 
-  // Forem/dev.to and Pygments-style wrappers: class="highlight LANG" on the <pre>
-  // or a wrapping div, where LANG is a bare class token. Accept it only when a
-  // sibling token resolves to a grammar: that guard rejects the non-language
-  // tokens these classes also carry (e.g. "highlight selected", "highlight line").
+  // Forem/dev.to and Pygments write class="highlight LANG" on the <pre> or a wrapping div, and the
+  // same classes also carry non-language tokens like "highlight selected" and "highlight line".
   for (const element of candidates) {
     const tokens = element?.className.split(whitespaceRegex) ?? []
 
@@ -153,11 +131,6 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
     }
   }
 
-  // GitHub/Linguist (<div class="highlight highlight-source-LANG">) and Sphinx/RST
-  // (<div class="highlight-LANG">) name the language in a wrapper class. Accept it
-  // only when it resolves to a grammar. The bare Sphinx form also needs a 2+ char
-  // token, since one-letter classes (highlight-c, highlight-r) collide with CSS
-  // utilities. GitHub's source-/text- prefix is signal enough to skip that guard.
   for (const element of candidates) {
     const tokens = element?.className.split(whitespaceRegex) ?? []
 
@@ -171,11 +144,8 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
     }
   }
 
-  // Bare language-name class: class="haskell", class="python": older or hand-rolled
-  // templates name the language as a standalone class, with no prefix or wrapper token.
-  // Checked last so every explicit convention above wins. Accept a token that resolves
-  // to a grammar. Require 3+ chars so the short aliases (c, r, go, js, md) that double
-  // as CSS utility classes cannot match.
+  // A two-letter token like go, js or md is as often a CSS utility class as a language.
+  // Older or hand-rolled templates name the language as a standalone class, like class="haskell".
   for (const element of candidates) {
     const tokens = element?.className.split(whitespaceRegex) ?? []
     const language = tokens.find((token) => token.length >= 3 && isSupportedLanguage(token))
@@ -186,9 +156,7 @@ export const detectLanguage = (pre: Element | null, code: Element | null): strin
   }
 }
 
-// highlight.js resolves these to its "Plain text" grammar, which only escapes the text: no
-// tokens, no real language. A block declared as one of them is left untouched instead of being
-// badged "Plain text", which says nothing a code block does not already convey.
+// highlight.js maps plaintext, text and txt to a Plain text grammar that only escapes the text.
 const plaintextLanguages = new Set(['plaintext', 'text', 'txt'])
 
 const preTag = new Set(['pre'])
@@ -205,20 +173,9 @@ const labelForLanguage = (language: string): string => {
 // code line each, with no newline character between them.
 const blockLineWrappers = new Set(['div', 'p', 'li', 'tr'])
 
-// Read a code block to text, treating those block-level line wrappers as line breaks. Reading
-// textContent alone would flatten every wrapped line onto one row, because it concatenates
-// without honoring the layout. A break is added when a wrapper opens, skipped when the text is
-// empty (so there is no leading break) or already ends with one (so nested wrappers like
-// <div><div>line</div></div> and blank spacer lines collapse back to a single break). Blocks that
-// carry real newlines, and inline highlighters, are unaffected: with no wrappers to open, the
-// result equals textContent.
 const getCodeBlockText = (target: Element): string => {
   let text = ''
 
-  // Iterative pre-order walk (explicit stack, not recursion) so a deeply nested code
-  // block can't overflow the call stack. Children are pushed in reverse so they pop in
-  // document order. A block wrapper is visited before its children, matching the
-  // recursive order in which the leading newline was inserted.
   const stack: Array<Node> = [target]
 
   while (stack.length > 0) {
@@ -265,17 +222,10 @@ const isLineNumberText = (text: string): boolean => {
   return lines.length > 0 && lines.every((line) => integerLineRegex.test(line))
 }
 
-// Inline per-line number spans (Chroma `.ln`/`.lnt`, Prism `.line-numbers-rows`,
-// Pygments `linenos=inline` `.lineno`).
-// Class-based on purpose: a bare numeric span can't be told from a real number token
-// in highlighted code, so structural detection would corrupt the code.
+// Chroma writes .ln and .lnt, Prism .line-numbers-rows, Pygments .lineno under linenos=inline.
 const gutterLineSpanSelector = 'span.line-numbers-rows, span.ln, span.lnt, span.lineno'
 
-// Line-number gutters: Rouge/Pygments/Chroma (and others) render code in a two-column
-// table (numbers | code), and Chroma/Prism also emit per-line number spans. Either way
-// the digits get treated as a separate code block or walked into the highlighted text.
-// Drop them before highlighting: keep only the code column's <pre>, and remove inline
-// per-line number spans.
+// Rouge, Pygments and Chroma render code in a two-column table of line numbers beside code.
 const stripCodeGutters = (document: Document): void => {
   for (const table of document.querySelectorAll('table')) {
     const pres = Array.from(table.querySelectorAll('pre'))
@@ -297,10 +247,7 @@ const stripCodeGutters = (document: Document): void => {
       .sort((a, b) => (b.textContent?.length ?? 0) - (a.textContent?.length ?? 0))[0]
 
     if (codePre) {
-      // Rouge and similar wrap the gutter table inside the block's own <pre><code>.
-      // Replacing the table with the code column's <pre> would nest a <pre> inside that
-      // <code>. When such an outer <pre> exists, keep it as the block: move the code
-      // column's content in place of the table and mark the outer <pre> as numbered.
+      // Rouge wraps the gutter table inside the block's own <pre><code>.
       const wrapperPre = table.closest('pre')
 
       if (wrapperPre) {
@@ -337,10 +284,9 @@ const stripCodeGutters = (document: Document): void => {
 // inside these, so a gutter class outside any code block is not a signal.
 const highlightSignalTags = new Set(['pre', 'code', 'table'])
 
+// A code block ships unhighlighted, its language named only by a class, attribute or wrapper.
 export const highlightCode: DomTransform = ({ highlightFn }) => {
   return async (document) => {
-    // Most feed items carry no code. One walk (see walkElements) checks that up
-    // front, instead of the five querySelectorAll calls below finding nothing.
     const hasWork = walkElements(document, (element) => highlightSignalTags.has(element.localName))
 
     if (!hasWork) {
@@ -350,12 +296,6 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
     stripCodeGutters(document)
 
     // Some editors emit a block of code as a standalone <code> with no <pre> wrapper.
-    // Promote those to <pre><code> first so the loop below treats them like any other
-    // block: highlighted when a hint declares the language, and rendered as a
-    // block (a loose <code> renders inline, collapsing the newlines). The signal
-    // is two or more non-empty lines, not just any newline: feeds often pretty-print
-    // their HTML, wrapping an inline <code>word</code> as `<code>\n  word\n </code>`,
-    // so a lone newline does not mean block. A single content line stays inline.
     for (const code of document.querySelectorAll('code')) {
       if (hasAncestorWithTagName(code, preTag)) {
         continue
@@ -364,6 +304,7 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
       const rawContentLines = getCodeBlockText(code).split('\n')
       const nonEmptyContentLines = rawContentLines.filter((line) => line.trim())
 
+      // A pretty-printing feed wraps inline <code>word</code> in newlines, so one line is no block.
       if (nonEmptyContentLines.length < 2) {
         continue
       }
@@ -391,10 +332,6 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
         continue
       }
 
-      // A code block is highlighted only when its language is declared via a hint
-      // (language-* class, data-language, etc.). A block with no hint stays plain:
-      // auto-detection, even the deterministic parses-as-JSON kind, guesses a language
-      // the feed never marked and reads as inconsistent across unlabeled blocks.
       const language = detectLanguage(pre, code)
 
       if (language === undefined) {
@@ -423,19 +360,7 @@ export const highlightCode: DomTransform = ({ highlightFn }) => {
       pre.setAttribute('data-pre-label', labelForLanguage(language))
     }
 
-    // Give a bare code block the <pre><code> structure: the <pre> stays a static
-    // container (a stable anchor for the language badge) and the new <code> is
-    // what scrolls. A bare <pre> highlighted in place carries the hljs class,
-    // which moves onto the new <code> so the theme styles the element holding the
-    // token spans.
-    //
-    // Only wrap a <pre> that has no <code> at all. A <pre> that already contains
-    // one must be left as is: wrapping it would nest <code> inside <code>, which
-    // defeats trimPreWhitespace (its first line would start with a <code> tag, so
-    // the common indent reads as zero and the block is never de-indented). This
-    // covers Pygments' stray leading empty <span> (<pre><span></span><code>…) and
-    // code buried under wrapper <div>s alike. The empty <span> is dropped later by
-    // stripEmptyTags.
+    // Pygments writes a stray empty <span> ahead of the <code>, as <pre><span></span><code>….
     const presToWrap = Array.from(document.querySelectorAll('pre')).filter(
       (pre) => !pre.querySelector('code'),
     )

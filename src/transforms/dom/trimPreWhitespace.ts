@@ -4,12 +4,8 @@ import { isText } from '../../utils/dom.js'
 const trailingWhitespaceRegex = /\s+$/
 const leadingBlankLinesRegex = /^(\s*\n)+/
 
-// A line's indentation can sit behind leading inline tags: some highlighters wrap
-// each line in its own <span> with the indent inside it, and can be written with
-// non-breaking-space entities instead of literal spaces. Skip the leading tags,
-// then read the indent one "unit" at a time: a literal whitespace char or a single
-// nbsp entity, each worth one column. innerHTML serializes U+00A0 as an entity, so
-// a plain whitespace regex on the markup never sees it otherwise.
+// innerHTML serializes U+00A0 as an entity, so `\s` alone never sees an nbsp indent.
+// Some highlighters wrap each line in a <span> with the indent inside it, as nbsp entities.
 const leadingTagsRegex = /^(?:<[^>]*>)*/
 const indentUnitRegex = /^(?:[^\S\n]|&nbsp;|&#160;|&#xa0;)/i
 
@@ -34,8 +30,7 @@ const splitIndent = (line: string): LineIndent => {
   return { tags, units, rest }
 }
 
-// Trims trailing whitespace and removes common leading indentation from <pre> blocks.
-// Feeds sometimes indent code to match surrounding HTML, adding unwanted whitespace.
+// A <pre> indented to match the surrounding HTML, which renders the indent as part of the code.
 export const trimPreWhitespace: DomTransform = () => {
   return (document) => {
     for (const pre of document.querySelectorAll('pre')) {
@@ -45,11 +40,6 @@ export const trimPreWhitespace: DomTransform = () => {
         .replace(trailingWhitespaceRegex, '')
         .replace(leadingBlankLinesRegex, '')
 
-      // Smallest indentation across content lines, computed in a single pass that
-      // bails at column zero: the common case once highlighting has wrapped lines
-      // in <span>s with no shared indent. A line that is only tags and whitespace
-      // (e.g. an empty line <span>) carries no content, so it neither counts nor
-      // forces the common indent to zero.
       let common = Number.POSITIVE_INFINITY
 
       for (const line of trimmed.split('\n')) {
@@ -91,12 +81,8 @@ export const trimPreWhitespace: DomTransform = () => {
         continue
       }
 
-      // Only leading/trailing whitespace changed, which lives in the boundary
-      // text nodes. Edit those in place instead of writing innerHTML: the write
-      // triggers a parse + serialize round-trip that, for <pre> containing
-      // <xmp> or other raw-text quirks of linkedom, can re-escape entities and
-      // corrupt code samples, and the round-trip dominates the cost on large
-      // blocks.
+      // Writing innerHTML re-parses the block, which for a <pre> holding <xmp> or another linkedom
+      // raw-text element can re-escape entities and corrupt the code sample.
       const lastChild = target.lastChild
 
       if (isText(lastChild)) {

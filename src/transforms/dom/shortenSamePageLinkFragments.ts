@@ -25,17 +25,7 @@ const collectFragmentTargets = (document: Document): Set<string> => {
   return targets
 }
 
-// Rewrites a same-page href back to its bare `#fragment` so it stays local. This is the inverse
-// of resolveRelativeUrls: once hrefs are absolute, an in-page anchor to the post itself (e.g. a
-// heading permalink `https://site/post#sec`) reads as a cross-page link, and the downstream
-// reader strips the page's origin context, so it navigates away instead of scrolling to its
-// target. Off-page fragment links (a different post or site) are left untouched.
-//
-// A link on the item's own page (`baseUrl`) is always shortened. Some feeds, notably
-// HTML-to-Atom bridges, instead absolutize in-page fragments against the feed's site or feed
-// page (`sameSiteUrls`) rather than the item permalink. Those are shortened only when the
-// fragment names a target that exists in this content, so genuine links to another of the site's
-// pages, and self-consistent third-party embeds, are left alone.
+// An in-page anchor absolutised to its own post reads as a cross-page link and navigates away.
 export const shortenSamePageLinkFragments: DomTransform = ({
   baseUrl,
   sameSiteUrls = [],
@@ -71,8 +61,8 @@ export const shortenSamePageLinkFragments: DomTransform = ({
         continue
       }
 
-      // A fragment on one of the item's other pages counts as in-page only when
-      // its target is actually present in the content.
+      // Shortening a same-site link with no target in the content kills a link to another page.
+      // HTML-to-Atom bridges absolutise in-page fragments against the feed page, not the post.
       if (otherSelfUrls.length === 0) {
         continue
       }

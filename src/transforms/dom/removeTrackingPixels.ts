@@ -16,6 +16,7 @@ const buildPathRegex = (segments: ReadonlyArray<string>): RegExp | null => {
 
   const alternation = segments.map((segment) => escapeRegex(segment)).join('|')
 
+  // The [./] terminator keeps a segment from matching inside words like tracker or counter.
   return new RegExp(`/(?:${alternation})[./]`, 'i')
 }
 
@@ -51,18 +52,14 @@ const isPixelSized = (dimensions: { width?: number; height?: number }): boolean 
   return isPixelDimension(dimensions.width) || isPixelDimension(dimensions.height)
 }
 
-// Raster sources signal a real content image (tracking pixels are GIF/script
-// beacons), so we never strip them on the size heuristic. `.gif` is excluded:
-// it is the dominant spacer/pixel format.
+// gif stays out of the raster list: it is the dominant spacer and pixel format.
+// Tracking pixels ship as GIF or script beacons.
 const rasterExtensionRegex = /\.(?:jpe?g|png|webp|avif)(?:$|[?#])/i
 const rasterFormatQueryRegex = /[?&](?:format|fm|output)=(?:jpe?g|png|webp|avif)\b/i
 
-// A `0×0` image still fires its request, so trackers do use it and dimension
-// alone can't clear an image. But `0`/unset is the dominant lazy-load
-// *placeholder* convention (real size set client-side), and at `0×0` a raster
-// `src` is overwhelmingly real content: corpus `0×0` beacons are script/`.gif`
-// endpoints, not raster files. A non-empty `srcset` is a content signal at any
-// size. The hidden-style and tracking-host checks still apply regardless.
+// A raster src clears a 0x0 lazy placeholder only: raster beacons ship at 1x1 as well.
+// A non-empty srcset is a content signal at any size.
+// A 0x0 image still fires its request, and 0 or unset is the lazy-load placeholder convention.
 const hasContentImageSignal = (
   image: Element,
   dimensions: { width?: number; height?: number },
@@ -82,6 +79,7 @@ const hasContentImageSignal = (
   return !!src && (rasterExtensionRegex.test(src) || rasterFormatQueryRegex.test(src))
 }
 
+// A tracking pixel: a hidden or pixel-sized <img> whose only job is to fire a request.
 export const removeTrackingPixels: DomTransform = (context) => {
   const hosts = new Set(context.trackingHosts)
   const pathRegex = buildPathRegex(context.trackingPathSegments)

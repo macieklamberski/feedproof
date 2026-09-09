@@ -3,20 +3,19 @@ import { isUrlShaped } from '../../utils/urls.js'
 
 const imgRegex = /<img\s/i
 
-// Stricter than the shared check: image lazy-attributes also carry JSON blobs
-// (srcset descriptors, gallery configs), which are never a usable src.
+// Lazy image attributes also carry JSON blobs, which isUrlShaped alone lets through.
 const isUsableLazyValue = (value: string): boolean => {
   return isUrlShaped(value) && !value.startsWith('{') && !value.startsWith('[')
 }
 
+// An <img> whose real src or srcset sits in a lazy attribute, or in a <noscript> twin beside it.
 export const fixLazyImages: DomTransform = (context) => {
   const lazySrcSet = new Set(context.lazySrcAttributes)
   const lazySrcsetSet = new Set(context.lazySrcsetAttributes)
   const { lazySrcAttributes, lazySrcsetAttributes } = context
 
   return (document) => {
-    // <source> is included so lazy srcset on <picture><source> is promoted before
-    // flattenPictureElements reads it: otherwise the modern AVIF/WebP source is dropped.
+    // <source> included: flattenPictureElements reads its srcset next and would drop the AVIF one.
     const elements = document.querySelectorAll('img, source')
 
     for (const element of elements) {

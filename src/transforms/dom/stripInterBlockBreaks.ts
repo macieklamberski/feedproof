@@ -2,8 +2,7 @@ import type { DomTransform } from '../../types.js'
 import { isBlockElement, isBr, isElement, isMediaElement, isSkippable } from '../../utils/dom.js'
 import { emojiImageAttribute } from './unwrapEmojiImages.js'
 
-// An emoji image keeps its picture but is sized like text, so it sits inside the line
-// instead of ending it and the <br> after it is a break the author meant.
+// An emoji image sits inside the line like text, so the <br> after it is a break the author meant.
 const isEmojiImage = (node: Node): boolean => {
   return isElement(node) && node.hasAttribute(emojiImageAttribute)
 }
@@ -42,12 +41,12 @@ const separatesFlow = (node: Node): boolean => {
   return isBlockElement(node) || isMediaBlock(node)
 }
 
-// A <br> directly inside a table's structure is a break the author wrote between rows or
-// cells. A spec parser foster-parents it out in front of the table, where the block walk
-// below removes it; linkedom leaves it in place, so it is removed here first.
+// linkedom leaves a <br> inside table structure where a spec parser foster-parents it out.
+// The author wrote it between rows or cells.
 const tableStructureBrSelector =
   'table > br, colgroup > br, thead > br, tbody > br, tfoot > br, tr > br'
 
+// A <br> between two blocks adds a blank line the block boundary already renders.
 export const stripInterBlockBreaks: DomTransform = () => {
   return (document) => {
     for (const br of document.querySelectorAll(tableStructureBrSelector)) {
@@ -90,9 +89,8 @@ export const stripInterBlockBreaks: DomTransform = () => {
             const previousSeparates = !previousBoundary || separatesFlow(previousBoundary)
             const nextSeparates = separatesFlow(child)
 
-            // Media only breaks the line because readers display it as a block, so the
-            // author's own <br> after it doubles the break whatever follows. After a real
-            // block the break was already redundant in the source, so it stays as intended.
+            // After media a <br> doubles the break whatever follows, unlike after a block.
+            // The page shows media inline, so there the author's <br> is the only line break.
             const previousIsMedia = previousBoundary !== null && isMediaBlock(previousBoundary)
 
             if (previousIsMedia || (previousSeparates && nextSeparates)) {

@@ -24,10 +24,8 @@ const readGistPath = (element: Element): string | undefined => {
   return match[1] ? `${match[1]}/${match[2]}` : match[2]
 }
 
-// A GitHub Gist embeds as `<script src="https://gist.github.com/<user>/<id>.js">`, which its JS
-// turns into the rendered gist. A reader runs no JS, so it renders nothing. AMP's <amp-gist> is
-// the same dead embed by another name, and needs the AMP runtime on top. Replace either with a
-// link to the gist page, so the content is at least reachable.
+// A Gist embeds as a gist.github.com <script> or an <amp-gist>, and renders nothing without JS.
+// An <amp-gist> names the id alone, and gist.github.com/{id} redirects to the owned url.
 export const linkifyGistEmbeds: DomTransform = () => (document) => {
   for (const element of document.querySelectorAll(gistCarrierSelector)) {
     const path = readGistPath(element)
