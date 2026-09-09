@@ -40,9 +40,9 @@ const composeEmbed = (parsed: URL, src: string): EmbedResolverResult | undefined
 
 // Podigee ships a generic loader script whose `data-configuration` is the player url itself,
 // so the embed is recoverable without executing anything. Most feeds carry it in that form.
-// The rest point the attribute at an inline config object (`data-configuration="podigee"` or
-// `="playerConfiguration"`), where the data lives in a script body this resolver deliberately
-// does not read: those keep the generic treatment.
+// The rest name a global variable on the embedding page instead (`data-configuration="podigee"`
+// or `="playerConfiguration"`, which the loader reads as `window[name]` or a dotted path into
+// it), so nothing in the markup holds the data and those keep the generic treatment.
 export const podigeeScriptEmbedResolver = createMarkupEmbedResolver(
   'script.podigee-podcast-player[data-configuration]',
   (element) => {
