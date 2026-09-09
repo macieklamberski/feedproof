@@ -83,11 +83,10 @@ const odyseeResolveEmbed = (link: string, element: Element): EmbedResolverResult
   }
 
   const title = attr(element, 'title')
-  // The channel is the first claim when the path names one, and the `@` is what marks it as a
-  // channel rather than a stream. Neither that marker nor the claim id after the colon is part
-  // of the name, so both are left behind.
+  // The channel is the first claim when the path names one, and the `@` is what marks it.
+  // The claim id after the colon only disambiguates the name, so it is not part of the name.
   const [channel] = claimPath.split('/')
-  const author = channel.startsWith('@') ? channel.slice(1).split(':')[0] : undefined
+  const author = channel.startsWith('@') ? channel.split(':')[0] : undefined
 
   return {
     provider: 'odysee',
