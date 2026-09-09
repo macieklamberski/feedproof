@@ -2,10 +2,8 @@ import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 
-// BuddyPress unfurls a link pasted into an activity update into a preview it stores in the
-// update itself, so it reaches the activity feed as markup: the title link, the page image
-// linked to the page and an excerpt, all under one `activity-link-preview-container`. Unlike
-// its commercial sibling it names no host, so there is no publisher to read.
+// BuddyPress's link preview: unfurled into the activity update as bare divs the theme styles.
+// The preview names no host, so there is no publisher.
 export const buddypressCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: '.activity-link-preview-container',

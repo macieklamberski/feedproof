@@ -2,10 +2,6 @@ import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, jsonAttr } from '../utils/dom.js'
 
-// Paragraph renders the card client-side but also ships the whole payload as an oEmbed
-// JSON blob in `data`, which is richer and steadier than the rendered markup: the inner
-// DOM has changed shape at least once (an older `.twitter-summary` variant alongside
-// today's `.link-embed`), while the JSON keys are Embedly's and stayed put.
 type EmbedlyData = {
   type?: string
   title?: string
@@ -16,6 +12,9 @@ type EmbedlyData = {
   author_name?: string
 }
 
+// Paragraph's link card: a div its client renders from the Embedly JSON blob the div carries.
+// The inner DOM has shipped as an older .twitter-summary and today's .link-embed, and the JSON
+// keys are Embedly's.
 export const paragraphCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: 'div[data-type="embedly"]',
@@ -26,17 +25,15 @@ export const paragraphCiteResolver: CiteResolver = {
       return
     }
 
-    // Embedly reuses this envelope for video and rich embeds, which are players, not link
-    // previews. A payload that names no type is kept, since older cards omit the key.
+    // Older cards omit the type, so requiring 'link' drops them.
+    // Embedly reuses the envelope for video and rich embeds, which are players.
     if (data.type !== undefined && data.type !== 'link') {
       return
     }
 
     return buildCite({
       provider: 'paragraph',
-      // `url` is Embedly's canonical form. The `src` attribute holds what the author typed
-      // and can differ (a bare http:// host, or an entirely different slug), so it is only
-      // the fallback.
+      // src is what the author typed, a bare host or another slug, so it is only the fallback.
       url: data.url ?? attr(element, 'src'),
       title: data.title,
       description: data.description,

@@ -2,11 +2,6 @@ import type { CiteResolver } from '../types.js'
 import { buildCite } from '../utils/cites.js'
 import { attr, find, jsonAttr, text } from '../utils/dom.js'
 
-// Substack's two post-embed shapes are separate components, not generations of one:
-// today's editor emits `.embedded-post-wrap` when embedding another creator's post and
-// `.digest-post-embed` when embedding the publication's own post (verified 2026-07: the two
-// key sets are disjoint, with no mixed blobs). Both carry their card data in the
-// `data-attrs` JSON and are rendered client-side on Substack itself.
 type CrossPostAttrs = {
   title?: string
   url?: string
@@ -29,9 +24,7 @@ type OwnPostAttrs = {
   post_date?: string
 }
 
-// An embed of another creator's post. On Substack it renders as the tall branded card
-// (publication logo header, body preview, a Read more button, engagement counts),
-// because the reader may not know the linked publication.
+// Substack's embed of another creator's post: an empty div its client hydrates from JSON.
 export const substackCrossPostCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: '.embedded-post-wrap',
@@ -56,20 +49,11 @@ export const substackCrossPostCiteResolver: CiteResolver = {
   },
 }
 
-// An embed of the publication's own post: the compact card behind Substack's digest and
-// "in case you missed it" flows (the March 2023 feature the class name comes from), and
-// also what a single self-post embed produces today. In a feed it ships as an empty
-// hydration div, where the `caption` is the linked post's excerpt and the only preview text
-// available, so it maps to the description.
-//
-// Substack's own site ships the same card hydrated instead, which is what a reader-mode
-// fetch of the post page sees. Its class is build-hashed there (`digestPostEmbed-flwiST`)
-// and reader extraction drops classes anyway, so the second arm matches the component name
-// and reads every field out of the markup. That shape carries no preview text or publication
-// branding, and dates it long-form ("October 5, 2025") rather than as the ISO string
-// `data-cite-date` holds, so those fields stay empty.
+// Substack's embed of the publication's own post: an empty hydration div, or hydrated on its site.
 export const substackOwnPostCiteResolver: CiteResolver = {
   kind: 'cite',
+  // On Substack's own site the class is build-hashed, digestPostEmbed-flwiST, and reader
+  // extraction drops classes.
   selector: '.digest-post-embed, [data-component-name="DigestPostEmbed"]',
   extract: (element) => {
     const attrs = jsonAttr<OwnPostAttrs>(element, 'data-attrs')
@@ -90,6 +74,7 @@ export const substackOwnPostCiteResolver: CiteResolver = {
       provider: 'substack',
       url: attrs.canonical_url,
       title: attrs.title,
+      // `caption` is the linked post's excerpt, the only preview text the blob carries.
       description: attrs.caption,
       author: attrs.publishedBylines?.[0]?.name,
       publisher: attrs.publication_name,
@@ -100,18 +85,7 @@ export const substackOwnPostCiteResolver: CiteResolver = {
   },
 }
 
-// The card Substack's Embed button generates for pasting elsewhere, so unlike the two above it
-// arrives in other publishers' feeds rather than Substack's own. The SDK it ships with rewrites
-// the div into the branded card. Without it the markup is already readable, three paragraphs
-// and a link, which is why this is a normalization rather than a repair.
-//
-// Everything the card states sits in the markup: the first paragraph is the title, sometimes
-// with the author appended as `Title by Author`. That is left whole, because splitting on ` by `
-// corrupts every title that contains the word. The second paragraph is the post's subtitle.
-//
-// The href is used as given and never minted. A publication on a custom domain writes its own
-// host here while still serving the standard `/p/{slug}` path, so a host check would drop the
-// variant it is meant to keep.
+// Substack's Embed button card for other sites: three paragraphs and a link its SDK restyles.
 export const substackPostEmbedCiteResolver: CiteResolver = {
   kind: 'cite',
   selector: 'div.substack-post-embed',
@@ -120,7 +94,11 @@ export const substackPostEmbedCiteResolver: CiteResolver = {
 
     return buildCite({
       provider: 'substack',
+      // A host check would drop custom-domain publications, which still serve the /p/{slug} path.
       url: attr(find(element, 'a[data-post-link]'), 'href'),
+      // Splitting on " by " to lift the author corrupts every title containing the word.
+      // The first paragraph is the title, sometimes with the author appended as `Title by Author`,
+      // and the second is the post's subtitle.
       title: text(paragraphs[0]),
       description: text(paragraphs[1]),
     })
@@ -135,12 +113,9 @@ type PublicationAttrs = {
   logo_url?: string
 }
 
-// A card for a whole publication rather than a post. In a feed the div ships childless and every
-// field comes from `data-attrs`, which carries no `description` or `hero_image` despite the post
-// shapes above having equivalents. Substack's own site ships the same card hydrated, and there
-// the blob omits `base_url` while the anchor carries the url, so each field falls back to the
-// markup. Nothing in either shape separates a card the author introduced from one Substack
-// injected, so every card renders.
+// Substack's card for a whole publication: a childless div in feeds, hydrated on its own site.
+// Its data-attrs carries no description or hero_image. Nothing in either shape separates a card
+// the author introduced from one Substack injected.
 export const substackPublicationCiteResolver: CiteResolver = {
   kind: 'cite',
   selector:
@@ -150,6 +125,7 @@ export const substackPublicationCiteResolver: CiteResolver = {
 
     return buildCite({
       provider: 'substack',
+      // On Substack's own site the blob omits base_url and the anchor carries the url.
       url: attrs?.base_url ?? attr(find(element, 'a.embedded-publication-link-part'), 'href'),
       title: attrs?.name ?? text(find(element, '.embedded-publication-name')),
       description: attrs?.hero_text ?? text(find(element, '.embedded-publication-hero-text')),

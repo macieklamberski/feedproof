@@ -3,23 +3,19 @@ import { buildCite } from '../utils/cites.js'
 import { attr, find, text } from '../utils/dom.js'
 import * as styles from '../utils/styles.js'
 
-// note.com renders a pasted link as an `external-article` figure. The same
-// `embedded-service="external-article"` attribute also marks shopping and crowdfunding
-// cards, but those never carry both a title and an anchor, so the guards drop them.
-//
-// The card exists in two shapes. Page HTML carries the classful `external-article-widget-*`
-// tree, with the thumbnail as a CSS `background-image` on the image anchor. Feed bodies
-// pass through note.com's RSS sanitizer, which strips every class and style, leaving
-// `<a><strong>title</strong><em>description</em><em>host</em></a>` (some older cards carry
-// the description and host as bare text runs instead of `em`s, where only the title is
-// recoverable).
+// note.com's external-article card, stripped of every class and style by its RSS sanitizer.
+// The sanitizer leaves <a><strong>title</strong><em>description</em><em>host</em></a>, and page
+// HTML carries the classful external-article-widget-* tree with a CSS background-image thumbnail.
 export const notecomCiteResolver: CiteResolver = {
   kind: 'cite',
+  // The same embedded-service value also marks shopping and crowdfunding cards, which never carry
+  // both a title and an anchor.
   selector: 'figure[embedded-service="external-article"]',
   extract: (element) => {
     const ems = Array.from(element.querySelectorAll('a > em'))
     // The stripped shape's host is always the last `em`, so a lone `em` has no description.
     const hostEm = ems.at(-1)
+    // A lone em is the host, not a description.
     const descriptionEm = ems.length > 1 ? ems[0] : undefined
 
     return buildCite({
