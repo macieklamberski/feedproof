@@ -120,6 +120,9 @@ const readSubstackPodcast = (element: Element): Partial<EmbedResolverResult> => 
   return {
     title: attributes.title || undefined,
     publisher: attributes.podcastTitle || undefined,
+    // Apple names the byline `artistName` on a show and on an episode alike, and it holds a
+    // person, a network or both ("Evan Epstein", "The New York Times", "Guy Raz | Wondery"),
+    // so it cannot answer who publishes (checked 2026-09-09).
     author: attributes.podcastByline || undefined,
     thumbnail: attributes.imageUrl || undefined,
     date: attributes.releaseDate || undefined,
