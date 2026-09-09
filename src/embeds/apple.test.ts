@@ -289,11 +289,42 @@ describeForEachParser('appleEmbedResolver', (parseHtml) => {
         url: 'https://podcasts.apple.com/us/podcast/boardroom-governance/id1513064579',
         height: 450,
         title: 'Boardroom Governance',
-        publisher: 'Boardroom Governance',
         author: 'Evan Epstein',
         thumbnail: 'https://substack-post-media.s3.amazonaws.com/public/images/podcast.jpg',
         date: '2026-03-04T00:00:00Z',
         duration: 3406,
+      }
+
+      expect(await extract(value)).toEqual(expected)
+    })
+
+    // The show title is the card's own title, so naming it a second time as the publisher would
+    // print the show twice and state something Apple's show page never does.
+    it('should state no publisher on a show card', async () => {
+      const showCardAttrs = jsonAttrValue({
+        url: 'https://embed.podcasts.apple.com/us/podcast/99-invisible/id394775318',
+        isEpisode: false,
+        title: '99% Invisible',
+        podcastTitle: '99% Invisible',
+        podcastByline: 'Roman Mars',
+      })
+      const value = html`
+        <div class="apple-podcast-container" data-component-name="ApplePodcastToDom">
+          <iframe
+            class="apple-podcast episode-list"
+            data-attrs="${showCardAttrs}"
+            src="https://embed.podcasts.apple.com/us/podcast/99-invisible/id394775318"
+          ></iframe>
+        </div>
+      `
+      const expected: EmbedResolverResult = {
+        provider: 'applepodcasts',
+        id: 'podcast/394775318',
+        src: 'https://embed.podcasts.apple.com/us/podcast/99-invisible/id394775318',
+        url: 'https://podcasts.apple.com/us/podcast/99-invisible/id394775318',
+        height: 450,
+        title: '99% Invisible',
+        author: 'Roman Mars',
       }
 
       expect(await extract(value)).toEqual(expected)

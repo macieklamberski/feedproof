@@ -78,8 +78,8 @@ const readSubstackItem = (element: Element, type: string): Partial<EmbedResolver
 
   const description = attributes.description?.trim()
   // The card states the act under the title, and which field it is depends on the type:
-  // Spotify's own show page names the publisher there and its track and album pages the
-  // artist (checked 2026-09-09).
+  // Spotify's own show page names the publisher there and its track and album pages the artist.
+  // An episode card names the show's act, a person or a network, never the show (2026-09-09).
   const isShow = type === 'show'
 
   return {

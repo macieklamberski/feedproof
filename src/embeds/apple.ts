@@ -119,7 +119,10 @@ const readSubstackPodcast = (element: Element): Partial<EmbedResolverResult> => 
 
   return {
     title: attributes.title || undefined,
-    publisher: attributes.podcastTitle || undefined,
+    // A show card states the show's own title here, so only an episode has a publication to name.
+    // Apple's episode page reads `Podcast Episode · Undertone` while its show page reads a genre
+    // and a cadence, `Design Podcast · Updated Weekly`, and never a publisher (checked 2026-09-09).
+    publisher: (attributes.isEpisode && attributes.podcastTitle) || undefined,
     // Apple names the byline `artistName` on a show and on an episode alike, and it holds a
     // person, a network or both ("Evan Epstein", "The New York Times", "Guy Raz | Wondery"),
     // so it cannot answer who publishes (checked 2026-09-09).
