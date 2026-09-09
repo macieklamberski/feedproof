@@ -49,6 +49,7 @@ const composeSubject = (subject: string): EmbedResolverResult | undefined => {
     id: `${type}/${user}/${album}/${counter}`,
     src: `https://my.mail.ru/${type}/${user}/video/embed/${album}/${counter}`,
     url: `https://my.mail.ru/${type}/${user}/video/${album}/${counter}.html`,
+    author: user,
   }
 }
 
