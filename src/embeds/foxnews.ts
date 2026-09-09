@@ -10,14 +10,8 @@ const safeIdRegex = /^\d+$/
 
 const foxnewsHosts = ['video.foxnews.com']
 
-// The player fills whatever frames it (`html, body { width: 100%; height: 100% }` on the embed
-// page), and Fox's own numbers for it are 16:9 throughout: 640 by 360 in the page's `og:video`
-// and in the iframe publishers paste, 466 by 263 in the script snippet.
 const playerRatio = '16/9'
 
-// `video-embed.html` is what Fox names as the player in the video page's `twitter:player` and
-// `embedUrl`. Checked live 2026-09-06: 200 for a real id, a 2011 id included, 404 for an
-// invented one.
 const composeEmbed = (id: string): EmbedResolverResult => {
   return {
     provider,
@@ -28,8 +22,6 @@ const composeEmbed = (id: string): EmbedResolverResult => {
   }
 }
 
-// Both carriers name the video in a query parameter: `id` on the script, `video_id` on the
-// iframe. Everything else in the query is the snippet's size or the embedding page's referrer.
 export const foxnewsResolveEmbed = (url: string): EmbedResolverResult | undefined => {
   const parsed = parseUrlOnHosts(url, foxnewsHosts)
   const id = parsed?.searchParams.get('video_id') ?? parsed?.searchParams.get('id')
@@ -42,9 +34,7 @@ export const foxnewsResolveEmbed = (url: string): EmbedResolverResult | undefine
   return id && safeIdRegex.test(id) ? composeEmbed(id) : undefined
 }
 
-// Fox's old share snippet is `embed.js?id=…&w=…&h=…` beside a `<noscript>` link to the video
-// site. The script no longer exists (404), so even on the page it was pasted into nothing plays,
-// while the video itself still serves from the embed page the id names.
+// Fox's old share snippet is an `embed.js` script tag whose loader is gone, so nothing plays.
 export const foxnewsScriptEmbedResolver = createMarkupEmbedResolver(
   'script[src*="video.foxnews.com/v/embed.js"]',
   (element) => {
@@ -54,14 +44,6 @@ export const foxnewsScriptEmbedResolver = createMarkupEmbedResolver(
 
 export const foxnewsIframeEmbedResolver = createUrlEmbedResolver(foxnewsHosts, foxnewsResolveEmbed)
 
-// Starts playback on the click that loads the player, unmuted. The embed page loads
-// `static.foxnews.com/static/orion/scripts/core/video/embed.js`, which reads
-// `API.getQueryVar("autoplay")` and pushes the rule `autoplay` on the literal `"true"` and
-// `noAutoplay` on `"false"`, ignoring every other value. `video/ag.app.js` applies that rule as
-// `{autoplay: true, usersettings: {enabled: false}}` against a player default of
-// `autoplay: false`, and the muted start is a separate `"muted"` prop on the rule that the bare
-// one does not carry. Both scripts read live 2026-09-08, brotli-compressed on the wire. The page
-// itself is the same with the parameter and without it, so the read is the player's.
 export const foxnewsRenderHint: EmbedRenderHint = {
   provider,
   autoplayParams: { autoplay: 'true' },

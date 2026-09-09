@@ -5,15 +5,8 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const podomaticHost = 'podomatic.com'
 
-// Every id here is decimal, and an episode id and a podcast id look identical, which is why the
-// kind travels with the id. The v2 route's podcast segment is held to it as well, even when the
-// episode is the id that travels, because the segment is written into the player url either way
-// and one `URL` never folded, `..%2F..`, would let the feed choose the path.
 const safeIdRegex = /^\d+$/
 
-// The html5 player's three styles, each measured in Chrome at 1200, 500 and 320 pixels wide:
-// the height is the same at every width, so this is a fixed height on a fluid width and never a
-// ratio. Publishers agree on the default, 166 of 233 html5 frames state 208.
 const defaultHtml5Height = 208
 const html5Heights = toMap({
   normal: defaultHtml5Height,
@@ -21,14 +14,8 @@ const html5Heights = toMap({
   square: 504,
 })
 
-// The current player, measured at 203 wide and 216 narrow because the episode title wraps. 205 is
-// what Podomatic's own snippet writes on all 11 frames in the corpus, and it sits between the two.
 const currentHeight = 205
 
-// The kind an html5 frame names. Read as a shape rather than enumerated: `episode` and `podcast`
-// are the two PodOmatic answers today, and everything else under `embed/html5` answers 404,
-// including the id position left empty (checked 2026-09-07), so listing them buys nothing the
-// route and the numeric id do not already do.
 const html5KindRegex = /^[a-z]+$/
 
 type Player = { kind: string; id: string; src: string; height: number }
@@ -40,8 +27,6 @@ const readPlayer = (url: URL): Player | undefined => {
     return
   }
 
-  // `embed/html5/{episode|podcast}/{id}`, with an optional `style` selecting one of three
-  // player shapes. The style is kept because it is what chose the height.
   if (segments[1] === 'html5' && html5KindRegex.test(segments[2] ?? '')) {
     const style = url.searchParams.get('style') ?? ''
     const named = html5Heights.has(style) ? style : 'normal'
@@ -57,11 +42,6 @@ const readPlayer = (url: URL): Player | undefined => {
     }
   }
 
-  // `embed/v2/podcast/{podcast}?episode_id={episode}&theme={theme}`, the snippet Podomatic hands
-  // out today. It names a podcast in the path and picks an episode out of it with a parameter,
-  // and that episode id is the same one the html5 route takes in its path: `episode_id=11083318`
-  // and `embed/html5/episode/11083318` are the same recording, checked live 2026-09-06 through
-  // the canonical link each player page carries.
   if (segments[1] === 'v2' && segments[2] === 'podcast') {
     const podcast = segments[3] ?? ''
 
@@ -72,8 +52,6 @@ const readPlayer = (url: URL): Player | undefined => {
     const episode = url.searchParams.get('episode_id') ?? ''
     const theme = url.searchParams.get('theme')
     const named = safeIdRegex.test(episode) ? `?episode_id=${episode}` : ''
-    // Encoded, because `searchParams` hands the value back decoded: a feed writing
-    // `theme=dark%26autoplay%3Dtrue` would otherwise mint a second parameter of its own choosing.
     const themed = theme && named ? `&theme=${encodeURIComponent(theme)}` : ''
 
     return {
@@ -95,34 +73,15 @@ export const podomaticResolveEmbed = (url: string): EmbedResolverResult | undefi
 
   return {
     provider: 'podomatic',
-    // Qualified by kind because the two id spaces share one grammar, and because the endpoint an
-    // enricher would call differs: `embed/html5/episode/{id}` and `embed/html5/podcast/{id}` each
-    // answer with the canonical page, the feed url and the title of what they hold.
     id: `${player.kind}/${player.id}`,
     src: player.src,
     height: player.height,
   }
 }
 
-// The size is preferred over the carrier's because the carrier states a box and this player has
-// none: 158 of 233 html5 frames declare `width="504" height="208"`, the right height beside a width
-// the player never keeps, and anything reserving space from that pair reserves 2.42:1.
+// PodOmatic's html5 player iframe, pasted with a 504 by 208 box the fluid player never keeps.
 export const podomaticEmbedResolver = createUrlEmbedResolver(
   [podomaticHost],
   podomaticResolveEmbed,
   { preferResolverSize: true },
 )
-
-// Two carriers are deliberately left to the generic fallback.
-//
-// `www.podomatic.com/embed/frame/multi/0?json_url={account}.podomatic.com/embed/multi/0?…` (272
-// occurrences over 4 feeds) answers 404 today, and the json_url it wraps now serves JSON rather
-// than a player. The account slug inside it addresses no live frame: `embed/html5/podcast/{slug}`
-// answers 200 with the empty player shell, since that route takes the numeric podcast id, and
-// only a fetch of `www.podomatic.com/podcasts/{slug}` would turn the slug into that number.
-//
-// The Flash players, `{account}.podomatic.com/swf/joeplayer_v{n}.swf` over 65 feeds, name their
-// episode as `jsonLocation={account}.podomatic.com/entry/embed_params/{timestamp}` in flashvars.
-// That timestamp is the episode's canonical page (`podcasts/{account}/episodes/{timestamp}` 200,
-// a fabricated timestamp 404), but the html5 player takes the numeric id and nothing derives one
-// from the other offline.

@@ -3,21 +3,11 @@ import { attr, keepIfMatches } from '../utils/dom.js'
 import { parseUrlOnHosts } from '../utils/urls.js'
 import { createMarkupEmbedResolver, createUrlEmbedResolver } from '../utils/widgets.js'
 
-// An integration id is a run of lowercase letters and digits, a playlist id is `v-` and twelve
-// more, and the loader also takes `auto` for a playlist the integration picks itself, so one class
-// covers all three with the hyphen admitted. No length is checked: both ids arrive as query values
-// on an exact route on a host that serves nothing but the player, so an id is the only thing that
-// reaches them.
 const safeIdRegex = /^[a-z0-9-]+$/
 
 const glomexHosts = ['player.glomex.com']
 const playerPathRegex = /^\/integration\/[^/]+\/(?:integration|iframe-player)\.html$/
 
-// The url glomex's own loader builds from a `<glomex-player>` element (read 2026-09-06). The
-// integration id alone selects a player whose playlist the integration chooses, which the loader
-// spells `playlist-id="auto"`. The host answers the same 1,722-byte shell for any id, so no id
-// can be checked by fetching it. The player fills whatever box it is given and the integration
-// config defaults to 16:9, the shape of every hydrated specimen (640x360).
 const composeEmbed = (integrationId: string, playlistId?: string): EmbedResolverResult => {
   const query = new URLSearchParams({ integrationId })
 
@@ -61,6 +51,7 @@ export const glomexResolveEmbed = (url: string): EmbedResolverResult | undefined
 
 export const glomexIframeEmbedResolver = createUrlEmbedResolver(glomexHosts, glomexResolveEmbed)
 
+// The `<glomex-player>` custom element, which only glomex's loader script turns into a player.
 export const glomexElementEmbedResolver = createMarkupEmbedResolver(
   'glomex-player[data-integration-id], glomex-integration[integration-id]',
   (element) => {

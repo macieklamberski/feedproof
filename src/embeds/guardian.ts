@@ -4,13 +4,9 @@ import { createUrlEmbedResolver } from '../utils/widgets.js'
 
 const guardianHosts = ['theguardian.com']
 
-// The player is `embed.theguardian.com/embed/video/{path}` and the video's page is the same
-// path on `www`: `{section}/video/{yyyy}/{mon}/{dd}/{slug}`. Checked live 2026-09-06: a real
-// path answers 200 with the player and its title, a fabricated slug 404.
+// `/embed/video/{section}/video/{yyyy}/{mon}/{dd}/{slug}`.
 const playerPathRegex = /^\/embed\/video\/([a-z0-9-]+\/video\/\d{4}\/[a-z]{3}\/\d{2}\/[a-z0-9-]+)$/
 
-// Measured 2026-09-07 in a browser at 300, 600 and 900 pixels wide: the `<video>` is 169, 338
-// and 506 tall and is the whole page, so the height is 16:9 of the width with nothing around it.
 const playerRatio = '16/9'
 
 export const guardianResolveEmbed = (url: string): EmbedResolverResult | undefined => {
