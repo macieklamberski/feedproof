@@ -19,10 +19,6 @@ import {
 } from './dom.js'
 import { cleanUrl, isOnHosts, resolveOrDropUrl, resolveOrKeepUrl } from './urls.js'
 
-// A card's date is whatever string the site chose to display, so the caller gets one chance to
-// normalize it and anything the parser rejects is kept verbatim, not dropped. Every path that
-// writes a date goes through this, so resolver output and enrichment payloads are treated
-// identically.
 const parseOrKeepDate = (
   date: string | undefined,
   parseDateFn: ParseDateFn | undefined,
@@ -39,19 +35,14 @@ export const atUsername = (name: string): string => {
   return `@${name.replace(leadingAtRegex, '')}`
 }
 
-// The elements that carry a third-party URL for someone else to render, each with the
-// attribute holding it: `<object>` names that URL `data` while the other two use `src`, and
-// that is the only difference between them. Adding a carrier is one line here, because both
-// the selector and the reader below are derived from this.
-//
-// Legacy Flash markup nests an `<embed>` inside an `<object>` and both match. The outer one
-// wins by document order and takes the inner with it.
 const embedCarriers: Record<string, string> = {
   iframe: 'src',
   embed: 'src',
   object: 'data',
 }
 
+// Legacy Flash markup nests an `<embed>` inside an `<object>`, and both match: the outer wins
+// by document order and takes the inner with it.
 export const embedCarrierSelector = Object.entries(embedCarriers)
   .map(([tag, attribute]) => `${tag}[${attribute}]`)
   .join(', ')
@@ -60,16 +51,8 @@ export const readCarrierUrl = (element: Element): string => {
   return element.getAttribute(embedCarriers[element.localName] ?? 'src') ?? ''
 }
 
-// The size a publisher states on the carrier is trusted by default, because they chose it for the
-// player they actually embedded. A resolver that has measured the platform can outrank that with
-// `preferResolverSize`: Scribd states the same `height="500"` on every document it embeds and keeps
-// the honest ratio in `data-aspect-ratio`, so a number from the markup is not always the better one.
-//
-// It says prefer and not replace because it only applies where the resolver has a size to prefer.
-// A resolver that states none falls back to the carrier however this is set, which is what keeps
-// the two refusals from cancelling out: TikTok once refused the carrier's landscape box while
-// stating nothing itself, and the placeholder came out with no size at all.
 type ResolverOptions = {
+  // Scribd states `height="500"` on every document and keeps the ratio in `data-aspect-ratio`.
   preferResolverSize?: boolean
 }
 
@@ -92,13 +75,7 @@ export const createMarkupEmbedResolver = (
 // wrapper implies when it declares none. Never both, which is the rule the placeholder carries too.
 type EmbedSize = Pick<EmbedResolverResult, 'width' | 'height' | 'ratio'>
 
-// The two questions asked of a size wherever one is merged: does it carry any dimension, and does
-// it carry anything at all. Named once so every merge reads as the rule it applies. Typed on the
-// field names alone so the normalized string record and the numeric result both qualify.
-//
-// A zero is not a dimension. `getElementDimensions` parses one so removeTrackingPixels can find a
-// 0 by 2 image, and every write side has always skipped it, so counting it as a claim here let a
-// `width="0"` carrier take the size slot off a resolver and then write nothing into it.
+// A zero is not a claim: `width="0"` once took the size slot off a resolver and wrote nothing.
 type SizeFields = { width?: unknown; height?: unknown; ratio?: unknown }
 
 const hasDimensions = (size: SizeFields): boolean => {
@@ -109,17 +86,6 @@ const hasSize = (size: SizeFields): boolean => {
   return hasDimensions(size) || size.ratio !== undefined
 }
 
-// Which of the two claims to a size wins. The carrier's is taken by default, whole: its dimensions,
-// or a ratio of its own. A resolver that asked to be preferred keeps its own instead, and either
-// way a side with nothing to say leaves the other standing.
-//
-// Whole, because mixing the two sources describes something neither meant: a width the publisher
-// stated beside a height the resolver derived is a box nobody measured. And on itself, because a
-// ratio inferred from an ancestor's responsive wrapper says what shape the box around the player
-// is, not what shape the player is. Read at full depth here it once turned a platform's own 9:16
-// into a theme's blanket 16:9. So the ancestors are read only when the resolver stated no size at
-// all: with nothing to beat, the wrapper's shape is the one signal left, and a sizeless player in
-// a responsive wrapper still gets a placeholder that can reserve space.
 const decideSize = (
   element: Element,
   result: EmbedResolverResult | undefined,
@@ -133,29 +99,23 @@ const decideSize = (
     return result
   }
 
+  // Ancestors are read only with no resolver size: a theme's 16:9 wrapper once beat a 9:16 player.
   const wrapperDepth = hasSize(result) ? 0 : undefined
   const declared = getEmbedSize(element, wrapperDepth)
 
-  // A width on its own is the one carrier claim that does not outrank a resolver's. A reader draws
-  // a pair as an aspect ratio and a lone height as a pixel height, but has nothing to draw from a
-  // width alone, so taking one over a resolver's ratio or height trades a box that reserves space
-  // for an attribute that reserves none. Where the resolver claims no size it still stands, and it
-  // is still never merged with one: the two sides stay whole either way.
+  // A lone width reserves no space, so it never outranks a resolver's ratio or height.
   const loneWidth = !!declared.width && !declared.height && !declared.ratio
 
   if (!hasSize(declared) || (loneWidth && hasSize(result))) {
     return result
   }
 
+  // Never merged: a publisher's width beside a resolver's height is a box nobody measured.
   const { width: _width, height: _height, ratio: _ratio, ...rest } = result
 
   return { ...rest, ...declared }
 }
 
-// The size a carrier states: its dimensions where it declares any, else the ratio a responsive
-// wrapper implies, so the placeholder can still reserve space. Dimensions outrank the ratio: they
-// measure this player, while the wrapper only says what shape the box around it is. `wrapperDepth`
-// bounds how far up the wrapper is looked for; 0 reads only the carrier itself.
 export const getEmbedSize = (element: Element, wrapperDepth?: number): EmbedSize => {
   const shapeRatio = getStylePairRatio(element)
 
@@ -165,20 +125,13 @@ export const getEmbedSize = (element: Element, wrapperDepth?: number): EmbedSize
 
   const dimensions = getElementDimensions(element)
 
-  // A pair too small to be a box is the shape it spells, whichever way the carrier wrote it. AMP
-  // states an element's aspect ratio in the same two attributes a plain iframe states pixels in,
-  // so `<amp-jwplayer width="16" height="9">` asks a reader to reserve sixteen pixels unless the
-  // pair is read as the 16/9 it means.
   const pairRatio = getPairRatio(dimensions.width, dimensions.height)
 
   if (pairRatio) {
     return { ratio: pairRatio }
   }
 
-  // The pair is not handed back whole. A carrier that states `width="0" height="360"` has
-  // claimed a height and nothing else, so the zero is left out rather than travelling as a
-  // dimension nobody stated. Flickr folds this answer into a query the endpoint honours
-  // literally, and a zero reaching it renders nothing.
+  // `width="0" height="360"` claims a height only, and Flickr renders nothing for a zero width.
   const size = trimObject(dimensions, Boolean)
 
   if (size) {
@@ -205,14 +158,7 @@ export const setDimensions = (
   }
 }
 
-// Every provider matches the same carriers and differs only in which hosts it claims and
-// how it reads an id out of the URL, so the match itself lives here. Keying on the URL
-// rather than on markup is what separates these resolvers from the ones that recognise a
-// platform's own class or attribute, and it is why the name says url and not iframe.
-//
-// The element travels alongside the url because a carrier can hold more than its src: an
-// iframe's `title` is the one field a publisher's snippet states that the url does not carry.
-// Resolvers that need nothing but the url ignore the second argument.
+// An iframe's `title` is the one field a publisher's snippet states that the url does not carry.
 export const createUrlEmbedResolver = (
   hosts: Array<string>,
   extract: (url: string, element: Element) => EmbedResolverResult | undefined,
@@ -233,10 +179,6 @@ export const createUrlEmbedResolver = (
   }
 }
 
-// Tells a media result apart from an embed result in the widget pass: only media results
-// carry the element tag to mint.
-// The kinds whose results the widget machinery mints: an embed placeholder or a native media
-// element. Both the widget pass and the enclosure probe select by this.
 export const isEmbedOrMediaResolver = (
   resolver: WidgetResolver,
 ): resolver is EmbedResolver | MediaResolver => {
@@ -247,13 +189,7 @@ export const isMediaResult = (result: WidgetResolverResult): result is MediaReso
   return 'tag' in result
 }
 
-// The iframe a rebuild transform mints in place of a facade, so anything that should hold for
-// every rebuilt player is written once here rather than eleven times. A caller adds whatever its
-// own facade stated on top: a title, a size, a shape, a poster it recovered.
-//
-// Deliberately not used for the probe iframe in injectEnclosures. That one is never inserted: it
-// exists so url-keyed resolvers have a carrier to match their selector against, and giving it
-// whatever emitted iframes carry would change what every resolver sees.
+// Not used by the injectEnclosures probe: anything set here would change what every resolver sees.
 export const createIframe = (document: Document, src: string): HTMLElement => {
   const iframe = document.createElement('iframe')
   iframe.setAttribute('src', src)
@@ -292,10 +228,6 @@ type ImageFields = {
   height?: number
 }
 
-// The one image every pass mints, whether it stands for an enclosure, a platform's static render
-// or an `<img>` recovered from a container that parked its url. Urls arrive resolved, the same
-// terms `createMediaElement` sets, and `src` is required because an image without one is an empty
-// box the reader still has to lay out.
 export const createImage = (document: Document, fields: ImageFields): HTMLElement => {
   const image = document.createElement('img')
   image.setAttribute('src', fields.src)
@@ -327,10 +259,6 @@ export const createLinkedImage = (
   return link
 }
 
-// Writes a field record as `data-{type}-*` attributes, replacing any the element already carries.
-// A later pass that sets a field means it: an enrichment pass is the platform's own API answering
-// about this exact embed, and that beats whatever a resolver read off the markup. A pass that
-// wants to keep an existing value checks for it before calling, as assignVideoPosters does.
 export const updatePlaceholder = <Type extends object>(
   element: Element,
   type: GeneratedWrapperType,
@@ -359,9 +287,7 @@ export const createPlaceholder = <Type extends object>(
   return element
 }
 
-// Maps embed metadata to its `data-embed-*` field record. Key order is the
-// attribute write order, so it's kept stable. Shared by embed creation and
-// enrichment so the per-field rules live in one place.
+// Key order is the attribute write order.
 export const normalizeEmbedFields = (
   metadata: Partial<EmbedResolverResult>,
 ): Record<string, string | undefined> => {
@@ -384,14 +310,7 @@ export const normalizeEmbedFields = (
   }
 }
 
-// A placeholder states its size as dimensions or as a ratio, never both, and the size moves as a
-// unit. Every embed placeholder is written through here, creation and enrichment alike, which is
-// what keeps the two from ever landing on the same element.
-//
-// A write that carries any size clears the whole size slot first, so what it brings lands whole.
-// Writing width and height as independent attributes once let an enricher's width sit next to a
-// resolver's height, a box neither of them measured (560 beside a fixed 190). Where a write
-// brings both dimensions and a ratio, the dimensions win as the more specific claim.
+// The size slot is cleared whole: an enricher's width once sat beside a resolver's height.
 export const updateEmbedPlaceholder = (
   element: Element,
   metadata: Partial<EmbedResolverResult>,
@@ -411,28 +330,7 @@ export const updateEmbedPlaceholder = (
   updatePlaceholder(element, 'embed', fields)
 }
 
-// Everything an embed states about a url or a date, made ready to write: each url resolved against
-// the base, the canonical one cleaned of whatever tracking the publisher pasted, the date handed to
-// the caller's parser. Every pass that writes to a placeholder goes through this, whether the embed
-// came from markup, from an enclosure or from an enricher's payload, so all three carry their
-// fields on the same terms.
-//
-// `src` and the canonical url both take the drop answer: one is what the reader loads and the
-// other is where a click goes, and written unresolved either points at the reader's own origin.
-// Only the canonical one is cleaned, because a resolver that carries it out of the markup rather
-// than minting it from an id hands over whatever the publisher pasted, while a player src carries
-// query the platform needs. The thumbnail and the avatar are kept: they decorate an element that
-// renders regardless, and neither is a page anyone clicks, so neither is cleaned.
-//
-// The two passes that build a placeholder resolve their own src before they decide to build at all
-// and write it back over this one, so for them that field is a second resolve of a url already
-// resolved. Enrichment is the pass it is here for: it writes onto a placeholder that already has a
-// working src, so a payload src that will not resolve is left out and the resolver's stands.
-//
-// Nothing here refuses to produce a result. A field that cannot be made good is left out and the
-// rest still go on the element, because the three callers disagree about what a refusal would
-// mean: an unbuilt markup placeholder falls through to the generic tier and still renders, while
-// an unbuilt enclosure placeholder is simply never injected.
+// The src is never cleaned: a player src carries query the platform needs.
 export const prepareEmbedMetadata = (
   metadata: Partial<EmbedResolverResult>,
   context: TransformContext,
@@ -447,8 +345,6 @@ export const prepareEmbedMetadata = (
   }
 }
 
-// `src` is the one field a placeholder cannot be built without, so it is required inside the
-// metadata rather than passed beside it: a second argument would let the two disagree.
 export const createEmbedPlaceholder = (
   document: Document,
   metadata: Partial<EmbedResolverResult> & Pick<EmbedResolverResult, 'src'>,
@@ -459,10 +355,7 @@ export const createEmbedPlaceholder = (
   return element
 }
 
-// Maps cite metadata to its `data-cite-*` field record. Key order is the attribute write
-// order, so it's kept stable. Shared by cite creation and enrichment so the field set lives
-// in one place: an enricher passing a whole API payload through cannot reach beyond these
-// names, and no value ever ends up in an attribute name.
+// Key order is the attribute write order.
 export const normalizeCiteFields = (
   result: Partial<CiteResolverResult>,
 ): Record<string, string | undefined> => {
@@ -481,20 +374,9 @@ export const normalizeCiteFields = (
   }
 }
 
-// Everything a cite states about a url or a date, made ready to write: each url resolved against
-// the base, the canonical one cleaned of whatever tracking the publisher pasted, the date handed to
-// the caller's parser. Both passes that write to a cite placeholder go through this, whether the
-// card came from markup or from an enricher's payload, so the two carry their fields on the same
-// terms.
-//
-// The canonical url is kept when it will not resolve, unlike an embed's, because a cite is mostly
-// text: a card with a dead link still reads as the title, description and image it carries. So
-// nothing here refuses to produce a result.
-//
-// cleanAnchorUrls runs earlier, so the resolvers that read their url from an anchor href get it
-// already cleaned. The ones reading an attribute or a JSON blob (Tumblr, Substack, Discourse,
-// XenForo, Tistory, Paragraph) never pass through it, and neither does an enricher's payload, so
-// their redirect wrappers are unwrapped here. Re-cleaning an already-clean url is a no-op.
+// Tumblr, Substack, Discourse, XenForo, Tistory and Paragraph carry the card url in an attribute
+// or a JSON blob, still inside the publisher's redirect wrapper.
+// Unlike an embed's, the url is kept unresolved: a card with a dead link still reads as text.
 export const prepareCiteMetadata = (
   metadata: Partial<CiteResolverResult>,
   context: TransformContext,

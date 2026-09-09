@@ -42,11 +42,6 @@ export const blockElements = new Set([
   'ul',
 ])
 
-// Extraction helpers, used mainly by the cite resolvers to pull one field out of a card.
-// Each accepts a nullable element and returns `undefined`, not `null` or `''`, so
-// they compose (`attr(find(element, selector), 'src')`) and chain (`a() ?? b()`) without
-// optional-chaining noise, and so a blank value fails a `!value` guard.
-
 // The first descendant matching `selector`, or the first one also satisfying `predicate`.
 // The predicate form replaces `Array.from(element.querySelectorAll(…)).find(…)`: it builds
 // no intermediate array and stops at the first match.
@@ -76,8 +71,7 @@ export const text = (element: Nullish<Element>, selector?: string): string | und
   return target?.textContent?.trim() || undefined
 }
 
-// Trimmed text of the element's direct text-node children only, ignoring text inside any
-// nested elements. For values that sit as a bare text node beside a sibling element.
+// Text of the element's direct text-node children only, ignoring text inside nested elements.
 export const textNode = (element: Nullish<Element>): string | undefined => {
   if (!element) {
     return
@@ -94,11 +88,9 @@ export const textNode = (element: Nullish<Element>): string | undefined => {
   return result.trim() || undefined
 }
 
-// The inline `<script>` that configures a player sitting beside it, which several platforms use
-// instead of an iframe. Two things make it awkward to reach. `wrapBareInlineInParagraphs` runs
-// before the widget pass and puts a bare script in a `<p>`, so by then the player's sibling is
-// that paragraph, not the script. And where one item holds several players, each script
-// names its own container, so the element's id is what pairs them when they are not adjacent.
+// Several platforms configure a player from an inline <script> beside it, with no iframe.
+// An earlier pass wraps a bare script in a <p>, so the player's sibling may be that paragraph.
+// Where one item holds several players, each script names its container, so the id pairs them.
 export const findConfigScript = (element: Element): Element | undefined => {
   const sibling = element.nextElementSibling
 
@@ -133,12 +125,9 @@ export const keepIfMatches = (value: Nullish<string>, regex: RegExp): string | u
   return value && regex.test(value) ? value : undefined
 }
 
-// A Flash player's configuration, which is where a `.swf` carrier names what it plays: the
-// url is only the player. The value sits either on the carrier itself, which is how `<embed>`
-// spells it, or in a sibling `<param name="flashvars">`, which is how `<object>` does. Both
-// dialects appear on the same platform and often in the same snippet, so a reader that knows
-// one of them reads half the corpus. Returned raw, because callers disagree about what it
-// holds: a query string for Brightcove and Flickr, a config blob for Archive.
+// A `.swf` carrier names what it plays in flashvars, an attribute on `<embed>` and a sibling
+// `<param name="flashvars">` under `<object>`. Brightcove and Flickr write it as a query string,
+// Archive as a config blob.
 export const flashVars = (element: Nullish<Element>): string | undefined => {
   return attr(element, 'flashvars') ?? paramValue(element?.parentElement, 'flashvars')
 }
@@ -148,10 +137,7 @@ export const flashVar = (element: Nullish<Element>, name: string): string | unde
   return new URLSearchParams(flashVars(element)).get(name) ?? undefined
 }
 
-// The value of a named `<param>` under `root`. Flash-era snippets carry their whole
-// configuration this way, either beside the carrier for an `<object>` wrapper or, where the
-// player is a script rather than a movie, inside the element itself. The name is matched
-// case-insensitively because publishers spell it every way, so `name` arrives lowercased.
+// Publishers spell a `<param>` name in every case, so `name` arrives lowercased.
 export const paramValue = (root: Nullish<Element>, name: string): string | undefined => {
   const params = Array.from(root?.querySelectorAll('param') ?? [])
   const named = params.find((param) => attr(param, 'name')?.toLowerCase() === name)
@@ -159,8 +145,7 @@ export const paramValue = (root: Nullish<Element>, name: string): string | undef
   return attr(named, 'value')
 }
 
-// Parsed value of an attribute holding a JSON blob, as several platforms ship whole cards
-// or widget settings in one. Malformed JSON yields undefined instead of throwing.
+// Several platforms ship a whole card or widget settings as JSON in one attribute.
 export const jsonAttr = <Value>(element: Nullish<Element>, name: string): Value | undefined => {
   const raw = attr(element, name)
 
@@ -173,9 +158,8 @@ export const jsonAttr = <Value>(element: Nullish<Element>, name: string): Value 
   } catch {}
 }
 
-// SVG2 spells it `href`, SVG1 `xlink:href`. Read rather than selected because jsdom matches
-// `image[href]` on an element carrying only `xlink:href` and linkedom does not, so `:not([href])`
-// would drop the SVG1 spelling on jsdom alone. `hasAttribute` answers alike in both.
+// SVG2 spells it `href`, SVG1 `xlink:href`.
+// jsdom matches `[href]` on an element carrying only `xlink:href`, so a selector would drop SVG1.
 export const svgHrefAttribute = (element: Element): string => {
   return element.hasAttribute('href') ? 'href' : 'xlink:href'
 }
@@ -216,10 +200,6 @@ export const isBlockElement = (node: Node): boolean => {
   return isElement(node) && blockElements.has(node.localName)
 }
 
-// An element a reader sees nothing of: no child elements and no text beyond whitespace.
-// Attributes are not content, so an element carrying only a src or an href still counts as
-// empty here. This is not the test stripEmptyTags applies, which keeps some empty elements
-// and tells whitespace-only apart from no content at all.
 export const isEmptyElement = (element: Element): boolean => {
   return element.children.length === 0 && !hasText(element)
 }
@@ -261,17 +241,9 @@ export const isMediaElement = (node: Node): boolean => {
   return isElement(node) && mediaElements.has(node.localName)
 }
 
-// Elements that already play, or that already hold an assembled player, so a container
-// wrapping one needs nothing recovered. Deliberately not `mediaElements`: `img` and `picture`
-// are excluded because a poster image beside a parked media url is the common shape and
-// skipping those would miss the recovery, and `source` is included because its presence means
-// a player is already built around it.
+// No img or picture here: a poster beside a parked media url would otherwise count as a player.
 export const playableElements = new Set(['audio', 'embed', 'iframe', 'object', 'source', 'video'])
 
-// Collects a subtree's text nodes via an iterative depth-first walk (an explicit stack, not
-// recursion) so a deeply nested document can't overflow the call stack. Children are pushed in
-// reverse so they pop in document order. An element for which shouldPruneElement returns true
-// prunes its whole subtree.
 export const collectTextNodes = (
   root: Node,
   shouldPruneElement: (element: Element) => boolean,
@@ -314,14 +286,6 @@ export const hasAncestorWithTagName = (node: Node, tagSet: Set<string>, stopAt?:
   return false
 }
 
-// The registry of wrapper types this package generates: embed and cite placeholders,
-// the table scroll wrapper, the code-block wrapper. A wrapper carries its contract in
-// `data-{type}-*` attributes and its children are a fixed shape a consumer reads or
-// replaces wholesale, so transforms that restructure containers treat it as opaque.
-// createPlaceholder only accepts these types, so a new widget fails to compile until it
-// is added here, and adding it makes the wrapper opaque everywhere at once. `table` and
-// `pre` are not minted through the factory (wrapTablesForScroll and highlightCode set
-// their attributes directly) and stay manual entries.
 export const generatedWrapperTypes = ['embed', 'cite', 'table', 'pre'] as const
 
 export type GeneratedWrapperType = (typeof generatedWrapperTypes)[number]
@@ -334,20 +298,11 @@ export const isGeneratedWrapper = (element: Element): boolean => {
 
 export const placeholderSelectors = ['[data-embed-provider]', '[data-cite-provider]']
 
-// A pixel size as a player url or embed attribute states it: `200`, or `200px` where the
-// publisher wrote the unit. `coerceNumber` alone will not do, because it reads neither the
-// suffix nor a bound, and a stated height of `0` or `99999` is a mistake, not a size.
-// The bound below is what every player in `embeds/` needs.
-//
-// Deliberately not shared with `dimensionAttribute` below, which reads a declared width or
-// height attribute and has the opposite requirement: removeTrackingPixels finds a tracking
-// pixel by testing dimensions against `pixelDimensionLimit`, so `0`, `1` and `2` have to parse
-// as numbers there. Routing that through this would make every tracking pixel undetectable.
+// A player url or embed attribute states `200`, or `200px` where the publisher wrote the unit.
+// Not shared with dimensionAttribute: removeTrackingPixels needs 0, 1 and 2 to parse there.
 const pixelSizeRegex = /^(\d{1,5})(?:px)?$/
 
-// The range is a pair of numbers, not a digit count. A count is a leaky proxy for one:
-// `\d{2,4}` accepts `007` and `0000`, so the very values the bound exists to reject come
-// through as 7 and 0.
+// A digit count in the regex would pass `007` and `0000`, the values the bound exists to reject.
 const minimumPixelSize = 10
 const maximumPixelSize = 9999
 
@@ -363,22 +318,17 @@ export const parsePixelSize = (value: Nullish<string>): number | undefined => {
   return size >= minimumPixelSize && size <= maximumPixelSize ? size : undefined
 }
 
-// An empty or whitespace-only width/height attribute (`width=""`, common in editor output)
-// is not a declared dimension. coerceNumber treats those as absent. A trailing unit is dropped
-// first and never converted, since a browser reads `height="900px"` and `height="900pt"` alike
-// as 900 pixels, while `90%` stays unparsed. The unit is bounded and nothing is matched ahead of
-// it, since an unbounded run of letters, or of whitespace in front of them, costs six seconds on
-// a 120 KB attribute. Whatever whitespace the unit leaves behind is coerceNumber's to ignore.
+// A browser reads `height="900px"` and `height="900pt"` alike as 900 pixels. Editor output often
+// writes `width=""`, which states no dimension.
+// Nothing is matched ahead of the unit: an unbounded run there is quadratic on a long attribute.
 const trailingUnitRegex = /[a-z]{1,6}\s*$/i
 
 const dimensionAttribute = (element: Element, name: string): number | undefined => {
   return coerceNumber(element.getAttribute(name)?.replace(trailingUnitRegex, ''))
 }
 
-// Squarespace stamps the intrinsic size on `data-image-dimensions="2500x1695"`, and for
-// its gallery images (`img.thumb-image`) that is the only place the size exists: the
-// `src` is a resized CDN URL and there are no width/height attributes. It carries the same
-// value as the real attributes when both are present, so it is read as their fallback.
+// Squarespace stamps `data-image-dimensions="2500x1695"`, and on its gallery `img.thumb-image`
+// that is the only place the size exists.
 const imageDimensionsRegex = /^\s*([0-9]+)\s*x\s*([0-9]+)\s*$/i
 
 export const getElementDimensions = (element: Element): { width?: number; height?: number } => {
@@ -404,10 +354,8 @@ const paddingPercentRegex = /^([\d.]+)%$/
 const whitespaceRegex = /\s+/
 const wpEmbedAspectRegex = /wp-embed-aspect-(\d+)-(\d+)/
 
-// The bottom padding as the `padding` shorthand states it, which some embed wrappers write the
-// hack in (`padding: 0 0 56.25%`). Only the three and four value forms give the bottom a value of
-// its own: one or two values pad every side alike, which is spacing rather than a shape. A value
-// holding a function is left alone, since its own spaces would be counted as sides.
+// Some embed wrappers write the hack as `padding: 0 0 56.25%`, where only the three and four
+// value forms give the bottom a value of its own.
 const shorthandBottom = (declarations: styles.Declarations): string | undefined => {
   const padding = declarations.padding
 
@@ -420,12 +368,9 @@ const shorthandBottom = (declarations: styles.Declarations): string | undefined 
   return sides.length >= 3 ? sides[2] : undefined
 }
 
-// The ways an element can declare its aspect ratio, in the order they are trusted.
+// Ordered by trust, the max-width pair last: it infers a ratio the others state outright.
 const elementRatioSources: Array<(element: Element) => string | undefined> = [
-  // Modern CSS: the whole `aspect-ratio` value (`16 / 9`, or a single number), parsed
-  // like any other ratio string. The value takes an optional `auto` beside the ratio, on
-  // either side, dropped here as a token: matching it around an unbounded `\s+` costs two
-  // seconds on 120 KB of spaces.
+  // CSS allows `auto` beside the ratio, on either side.
   (element) => {
     const ratio = styles.declarations(element)['aspect-ratio']
 
@@ -459,12 +404,6 @@ const elementRatioSources: Array<(element: Element) => string | undefined> = [
     }
   },
 
-  // A pair of caps (`max-width:800px;max-height:600px`). Neither is a size the element
-  // takes, only the box it may not exceed, so together they encode a ratio and nothing
-  // more. Last in this list because it is the weakest reading: anything above states a
-  // ratio outright, while this one infers it. A real width or height never competes,
-  // since getElementDimensions reads those and getEmbedSize consults this table only
-  // when it found none.
   (element) => {
     const width = styles.pixels(element, 'max-width')
     const height = styles.pixels(element, 'max-height')
@@ -483,11 +422,6 @@ const getElementRatio = (element: Element): string | undefined => {
   }
 }
 
-// Walks the element and its ancestors (the element plus up to `maxDepth` levels) and returns the
-// first aspect ratio any of them declares: for an element whose own dimensions are unknown but
-// which sits in a responsive wrapper. Only ascends into a parent that wraps this element alone:
-// a parent with other element children sizes the whole group, so its ratio isn't this element's.
-// Pass maxDepth 0 to read only the element itself.
 export const getWrapperRatio = (
   element: Element,
   maxDepth = maxWrapperAncestorDepth,
@@ -513,30 +447,13 @@ export const getWrapperRatio = (
   }
 }
 
-// A ratio written the way CSS wants it, `W/H`, from the numbers the source stated. Nothing is
-// reduced or approximated: `800:600` stays `800/600`, and a bare decimal is written over one.
-// CSS renders every spelling of a shape identically, so tidying one up buys a consumer nothing,
-// while every attempt at it needed a threshold (a denominator bound, a tolerance, a digit count)
-// where the output changed for reasons unrelated to the ratio.
+// Not reduced: CSS renders `800/600` and `4/3` alike, and every reduction needed a threshold.
 export const formatRatio = (width: number, height = 1): string => {
   return `${width}/${height}`
 }
 
-// A width and height pair read as the shape it spells rather than the box it appears to be,
-// because no player is that small. Under the ceiling the pair is one of three things and none is a
-// box worth reserving: a ratio the author wrote without units, which CSS drops entirely since a
-// bare number is a length only at zero; an AMP element under `layout="responsive"`, where the two
-// attributes state the aspect ratio and nothing else, which is how JW Player's and YouTube's own
-// AMP snippets are documented (`width="16" height="9"`, `width="480" height="270"`); or a social
-// button, which arrives at 88x21 for Facebook, 90x20 and 32x20 for Google and 61x20 for Twitter
-// and is stripped as non-content before a size is ever asked for. Above the ceiling the same
-// numbers are a real box, or a forgotten unit on one.
-//
-// Both numbers have to be under it. A fixed-height bar states a real width beside a small height,
-// archive.org's 350x30 among them, and that is a box.
-//
-// Zero is excluded twice over: it is the one length CSS takes bare, and a zero pair is a
-// decorative div rather than a carrier.
+// Both under 100, a pair is a ratio, not a box: AMP states one as `width="16" height="9"`.
+// Both, because a fixed-height bar like archive.org's 350x30 states a real width and is a box.
 const shapeCeiling = 100
 
 export const getPairRatio = (
@@ -596,15 +513,10 @@ export const parseRatio = (value: string): string | undefined => {
   }
 }
 
-// A width or height at or below this many pixels marks a tracking pixel, not real
-// content. removeTrackingPixels strips images at or below it. resolveMediaDimensions
-// won't promote a dimension at or below it.
+// A width or height at or below this marks a tracking pixel.
 export const pixelDimensionLimit = 2
 
-// An element hidden from view: the `hidden` attribute, inline `display:none`, or
-// inline `visibility:hidden`. These are unambiguous. Other "hidden" signals are
-// overloaded and stay with their callers: `opacity:0` is usually a fade-in and
-// `0×0` is the lazy-placeholder convention, both handled in removeTrackingPixels.
+// opacity:0 stays out: off an image it is usually the first frame of a fade-in.
 export const isElementHidden = (element: Element): boolean => {
   if (element.hasAttribute('hidden')) {
     return true
@@ -623,11 +535,7 @@ export const hasZeroOpacity = (element: Element): boolean => {
   return styles.number(element, 'opacity') === 0
 }
 
-// Visits every element in document order and calls `visit` on each. Linkedom's
-// querySelectorAll compiles its selector (via css-select) on every call, so
-// replacing a per-document query with this walk avoids that repeated compile.
-// Template subtrees are skipped, the same as querySelectorAll does. Return true
-// from `visit` to stop early. walkElements then also returns true.
+// Linkedom compiles the selector on every querySelectorAll call, which this walk avoids.
 export const walkElements = (
   document: Document,
   visit: (element: Element) => boolean | undefined,

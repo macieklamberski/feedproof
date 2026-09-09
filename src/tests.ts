@@ -52,8 +52,7 @@ const parsers: Record<string, ParseHtml> = {
   jsdom: parseWithJsdom,
 }
 
-// A bare `bun test` exercises every suite under all parsers. `DOM_LIBRARY` narrows
-// to one for focused debugging.
+// The parsers a run exercises: every one by default, only the one DOM_LIBRARY names when set.
 export const selectParsers = (selected: string | undefined): Array<[string, ParseHtml]> => {
   if (selected !== undefined && !(selected in parsers)) {
     throw new Error(
@@ -76,15 +75,12 @@ export const describeForEachParser = (name: string, fn: (parseHtml: ParseHtml) =
   }
 }
 
-// Every resolver test needs the same three lines: parse the fixture, find the element the
-// resolver claims, hand it over. The result type is read off the resolver's own `extract`, so
-// an embed resolver yields an `EmbedResolverResult` and a cite one a `CiteResolverResult`
-// without the call site naming either, and without the cast that spelling it out would need.
 type AnyResolver<Result> = {
   selector: string
   extract: (element: Element) => MaybePromise<Result | undefined>
 }
 
+// Runs a resolver's extract on the element its selector claims in a fixture.
 export const resolverExtractor = <Result>(parseHtml: ParseHtml, resolver: AnyResolver<Result>) => {
   return async (value: string): Promise<Result | undefined> => {
     const element = parseHtml(value).querySelector(resolver.selector)
@@ -93,19 +89,15 @@ export const resolverExtractor = <Result>(parseHtml: ParseHtml, resolver: AnyRes
   }
 }
 
-// The value side of `jsonAttr`: a JSON payload written into an attribute with its inner quotes
-// entity-encoded, which is what survives a parse and serialise roundtrip. Several platforms ship
-// whole cards this way, Substack in `data-attrs` and Embedly in `data`, and the element around it
-// differs per component, so each fixture keeps its own builder and only the encoding is shared.
-// A string payload is written through untouched, which is how a test states malformed JSON.
+// The value side of jsonAttr: a payload with its quotes entity-encoded, or a string as written.
+// Substack ships a card this way in `data-attrs` and Embedly in `data`.
 export const jsonAttrValue = (attrs: Record<string, unknown> | string): string => {
   const raw = typeof attrs === 'string' ? attrs : JSON.stringify(attrs)
 
   return raw.replace(/"/g, '&quot;')
 }
 
-// Looks up an element that the fixture guarantees to exist, failing loudly instead of returning
-// null (which would otherwise need a cast or optional chaining in every assertion).
+// An element the fixture guarantees, throwing instead of returning null.
 export const queryElement = (document: Document, selector: string): Element => {
   const element = document.querySelector(selector)
 
@@ -116,22 +108,9 @@ export const queryElement = (document: Document, selector: string): Element => {
   return element
 }
 
-// Lets long HTML fixtures be written multi-line and indented while producing the exact compact
-// string. Each line is trimmed. Lines are joined with nothing where a tag ends and the next
-// begins (> meets <) or where a line starts with the closing > of a multi-attribute tag, and with
-// a single space otherwise. Long tags therefore break one attribute per line with the closing >
-// on its own line (a standalone /> joins with a space, matching the ` />` form). Whitespace that
-// matters to the assertion must stay inside a line.
-//
-// Built from the cooked template strings, not String.raw: Bun transpiles non-ASCII source
-// characters into \u escapes, and the raw strings would contain those escapes as literal text.
-//
-// A fixture is written one of two ways: on a single line, or broken one element per line with the
-// nesting shown by indentation. It is never broken to fit a width, because a break at an arbitrary
-// point implies a structure the markup does not have. A break may only sit where a `>` meets a `<`.
-// Anywhere else the join puts in a space that was not in the string, so text content stays glued to
-// its tags: `<p>Hello world</p>` is one line, and only the seams between elements become breaks.
+// A multi-line fixture joined into the compact string a parser serializes.
 export const html = (strings: TemplateStringsArray, ...values: Array<unknown>): string => {
+  // Cooked strings, not String.raw: Bun rewrites non-ASCII source into \u escapes raw would keep.
   let joined = strings[0] ?? ''
 
   for (const [index, value] of values.entries()) {
@@ -159,11 +138,8 @@ export const html = (strings: TemplateStringsArray, ...values: Array<unknown>): 
   return result
 }
 
-// Normalize serialized HTML so output can be compared across parsers: parsers
-// agree on the DOM but differ in how they render it back to a string (entity
-// escaping `&` vs `&amp;`, boolean attributes `controls` vs `controls=""`,
-// attribute order). Parsing once and sorting attributes collapses those
-// differences while leaving genuine DOM differences intact.
+// The parsers agree on the DOM and differ in serializing it: `&` against `&amp;`, `controls`
+// against `controls=""`, and attribute order.
 const normalizeHtml = (value: string): string => {
   const document = parseWithLinkedom(value)
 
@@ -187,14 +163,12 @@ const normalizeHtml = (value: string): string => {
 const toEqualHtml = (received: unknown, expected: string) => {
   const value = received as string
 
-  // A parser reproduces well-formed HTML exactly and repairs anything else, and `normalizeHtml`
-  // parses both sides, so without this the same repair lands on both and malformed output still
-  // passes. Unwrapped, because `parseWithLinkedom` lowercases attribute names and so cannot
-  // reproduce its own output. Either one matching is enough, since they disagree on void elements
-  // and entity escaping and the string came from one of them.
+  // Not parseWithLinkedom: it lowercases attribute names and never reproduces its own output.
   const parseUntouched = (html: string) => {
     return parseHTML(`<!doctype html><html><head></head><body>${html}</body></html>`).document
   }
+  // Without this a parser repairs both sides alike and malformed output passes.
+  // One match is enough: the two disagree on void elements, and the string came from one of them.
   const isWellFormed = [parseUntouched, parseWithJsdom].some((parse) => {
     return parse(value).body.innerHTML === value
   })
@@ -238,7 +212,7 @@ const toContainHtml = (received: unknown, substring: string) => {
 expect.extend({ toEqualHtml, toContainHtml })
 
 declare module 'bun:test' {
-  // biome-ignore lint/style/useConsistentTypeDefinitions: Declaration merging into the Matchers type requires an interface.
+  // biome-ignore lint/style/useConsistentTypeDefinitions: Declaration merging needs an interface.
   interface Matchers<T> {
     toEqualHtml: (expected: string) => T
     toContainHtml: (substring: string) => T
